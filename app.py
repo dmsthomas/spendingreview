@@ -160,7 +160,7 @@ with controls_col:
                         value=st.session_state.get(slider_key, 0),
                         key=slider_key, format="%d%%", label_visibility="collapsed",                              
                     )
-                    )
+                    
 
                     new_spend = baseline * (1 + pct_change/100)
                     surplus_delta = -(new_spend - baseline)

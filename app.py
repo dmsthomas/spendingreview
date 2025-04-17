@@ -127,8 +127,13 @@ with controls_col:
 
                     # Slider – relies on Streamlit to persist its own value
                     delta_units = container.slider(
-                        "", min_d, max_d,
-                        value=st.session_state.get(slider_key, 0),
+    "",
+    min_d,
+    max_d,
+    value=st.session_state.get(slider_key, 0),
+    key=slider_key,
+    label_visibility="collapsed"
+),
                         key=slider_key,
                         label_visibility="collapsed",
                     ),
@@ -159,8 +164,14 @@ with controls_col:
                     header_ph = container.empty()
 
                     pct_change = container.slider(
-                        "", min_value=min_pct, max_value=max_pct,
-                        value=int(st.session_state.get(slider_key, 0)*100),
+    "",
+    min_value=min_pct,
+    max_value=max_pct,
+    value=int(st.session_state.get(slider_key, 0)*100),
+    key=slider_key,
+    format="%d%%",
+    label_visibility="collapsed"
+)*100),
                         key=slider_key,
                         format="%d%%",
                         label_visibility="collapsed",

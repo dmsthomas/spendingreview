@@ -131,7 +131,7 @@ with controls_col:
                         value=st.session_state.get(slider_key, 0),
                         key=slider_key, label_visibility="collapsed",                              
                     )
-                    )
+                    
 
                     # Header using current slider value
                     new_val = baseline + delta_units

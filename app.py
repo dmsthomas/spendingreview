@@ -122,13 +122,22 @@ with controls_col:
                     unit_raw = row["unit"].strip()
                     min_d, max_d = int(row["min_change"]), int(row["max_change"])
 
-                    # Slider first (returns latest value)
-                    delta_units = st.slider(
-                        row["name"], min_d, max_d,
+                    container = st.container()
+                    header_ph = container.empty()  # will sit above slider
+                    delta_units = container.slider(
+                        label="", min_value=min_d, max_value=max_d,
                         value=st.session_state["tax_changes"].get(row["name"], 0),
-                        key=f"tax_{row['name']}", help=f"Baseline {baseline}{unit_raw}"
+                        key=f"tax_{row['name']}", label_visibility="collapsed",
                     )
                     st.session_state["tax_changes"][row["name"]] = delta_units
+
+                    new_val       = baseline + delta_units
+                    surplus_delta = delta_units * row["delta_per_unit"]
+                    header_ph.markdown(
+                        f"**{row['name']}**   <span style='color:grey'>{fmt_value(baseline, unit_raw)}</span> → "
+                        f"<span style='font-weight:700'>{fmt_value(new_val, unit_raw)}</span>  " + badge(surplus_delta),
+                        unsafe_allow_html=True,
+                    )
 
                     new_val       = baseline + delta_units
                     surplus_delta = delta_units * row["delta_per_unit"]
@@ -152,22 +161,22 @@ with controls_col:
                     baseline = row["baseline"]
                     min_pct, max_pct = int(row["min_pct"]), int(row["max_pct"])
 
-                    pct_change = st.slider(
-                        row["name"], min_pct, max_pct,
+                    container = st.container()
+                    header_ph = container.empty()
+                    pct_change = container.slider(
+                        label="", min_value=min_pct, max_value=max_pct,
                         value=int(st.session_state["spend_changes"].get(row["name"], 0)*100),
-                        key=f"spend_{row['name']}", format="%d%%", help=f"Baseline £{baseline:.0f}bn"
+                        key=f"spend_{row['name']}", format="%d%%", label_visibility="collapsed",
                     )
                     st.session_state["spend_changes"][row["name"]] = pct_change/100
 
                     new_spend     = baseline * (1 + pct_change/100)
                     surplus_delta = -(new_spend - baseline)
-                    cols = st.columns([6,1])
-                    cols[0].markdown(
-                        f"<span style='color:grey'>£{baseline:.0f}bn</span> → "
-                        f"<span style='font-weight:700'>£{new_spend:.0f}bn</span>",
+                    header_ph.markdown(
+                        f"**{row['name']}**   <span style='color:grey'>£{baseline:.0f}bn</span> → "
+                        f"<span style='font-weight:700'>£{new_spend:.0f}bn</span>  " + badge(surplus_delta),
                         unsafe_allow_html=True,
                     )
-                    cols[1].markdown(badge(surplus_delta), unsafe_allow_html=True)
 
 # ─────────────────────── Calculations ─────────────────────────────────────
 

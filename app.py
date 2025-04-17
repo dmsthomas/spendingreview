@@ -77,7 +77,7 @@ spend_delta = compute_spend_delta(spend_df, spend_changes)
 
 deficit_new = BASELINE_DEFICIT - tax_delta + spend_delta
 
-total_receipts_new = tax_df["baseline"].sum() + 249 + tax_delta  # 249 other receipts
+total_receipts_new = tax_df["baseline_receipts"].sum() + 310 + tax_delta
 programme_spend_new = spend_df["baseline"].sum() + spend_delta
 managed_expenditure_new = programme_spend_new + 99  # debt interest
 

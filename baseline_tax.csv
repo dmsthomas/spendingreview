@@ -1,0 +1,37 @@
+name,unit,baseline,delta_per_unit,min_change,max_change,baseline_receipts
+Income Tax basic rate,1 ppt,20.0,6.55,-10,10,279.0
+Income Tax higher rate,1 ppt,40.0,1.45,-10,10,0.0
+Income Tax additional rate,1 ppt,45.0,0.45,-10,10,0.0
+Income Tax savings starting rate,1 ppt,0.0,0.1,-10,10,0.0
+Personal Allowance (£100),£100,12500.0,-0.65,-20,20,0.0
+Personal Allowance (1%),1 %,100.0,-0.7,-20,20,0.0
+Basic‑rate limit (1%),1 %,37700.0,-0.2,-20,20,0.0
+NICs employee main rate,1 ppt,12.0,5.05,-10,10,184.0
+NICs employee additional rate,1 ppt,2.0,0.45,-10,10,0.0
+NICs employer rate,1 ppt,13.8,5.5,-10,10,0.0
+NICs self‑employed main rate,1 ppt,9.0,0.7,-10,10,0.0
+NICs self‑employed additional rate,1 ppt,2.0,0.05,-10,10,0.0
+Corporation Tax main rate,1 ppt,25.0,3.6,-10,10,85.0
+VAT standard rate,1 ppt,20.0,8.55,-10,10,174.0
+VAT reduced rate,1 ppt,5.0,0.55,-10,10,0.0
+CGT main rate,1 ppt,10.0,0.1,-10,10,16.0
+CGT residential property rate,1 ppt,18.0,0.15,-10,10,0.0
+IHT rate,1 ppt,40.0,0.45,-10,10,7.0
+IHT nil‑rate band (£5k),£5k,325000.0,-0.05,-20,20,0.0
+IHT nil‑rate band (1%),1 %,100.0,-0.1,-20,20,0.0
+IPT standard rate,1 ppt,12.0,0.2,-10,10,7.0
+IPT higher rate,1 ppt,20.0,0.05,-10,10,0.0
+SDLT 2% band,1 ppt,2.0,0.25,-5,5,18.0
+SDLT 5% band,1 ppt,5.0,0.5,-5,5,0.0
+Beer & cider duty (p/pint),1p,0.0,0.05,-20,20,4.0
+Wine duty (p/75cl),1p,0.0,0.03,-20,20,4.0
+Spirits duty (p/LAA),1p,0.0,0.02,-20,20,3.0
+Tobacco duty (p/stick),1p,0.0,0.1,-20,20,10.0
+Fuel duty petrol (ppl),1 ppl,52.95,0.48,-20,20,25.0
+Fuel duty diesel (ppl),1 ppl,53.95,0.48,-20,20,0.0
+Climate Change Levy (£/tCO2),£1,18.0,0.02,-20,20,2.0
+Carbon Price Support (£/tCO2),£1,18.0,0.02,-20,20,1.0
+Aggregates Levy (1p),1p,0.0,0.01,-20,20,0.5
+Landfill Tax (£/t),£1,103.0,0.02,-20,20,0.5
+Vehicle Excise Duty (£1),£1,190.0,0.1,-20,20,8.0
+Air Passenger Duty – reduced (£1),£1,13.0,0.13,-20,20,3.0

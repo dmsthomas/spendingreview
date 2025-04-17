@@ -1,10 +1,13 @@
-"""Streamlit app – grouped sliders & tabbed layout
-   v1.4 – tax and spend separated into tabs; sliders grouped in expanders.
+"""Streamlit app – v1.5
+• Two tabs (Tax / Spend) with grouped sliders in expanders
+• Header shows baseline → new and surplus badge *above* each slider
+• Slider values persist via Streamlit’s own session_state keys, so no double‑drag glitch
 """
 import pathlib
+from collections import defaultdict
+
 import pandas as pd
 import streamlit as st
-
 from calc import (
     load_tax_table,
     load_spend_table,
@@ -14,26 +17,26 @@ from calc import (
 )
 
 DATA_DIR = pathlib.Path(__file__).parent
-OTHER_RECEIPTS = 310  # £bn residual so baseline receipts sum to 1 141 bn
+OTHER_RECEIPTS = 310  # residual so baseline receipts = 1 141 bn
 
 st.set_page_config(page_title="UK Mock Spending Review", layout="wide")
-st.title("\U0001F4B0  UK Mock Spending Review (v 1.4)")
+st.title("\U0001F4B0  UK Mock Spending Review (v 1.5)")
 
-# ─────────────────────── Load baseline tables ─────────────────────────────
+# ── Load snapshots ────────────────────────────────────────────────────────
 try:
     tax_df   = load_tax_table(DATA_DIR / "baseline_tax.csv")
     spend_df = load_spend_table(DATA_DIR / "baseline_spend.csv")
 except FileNotFoundError as e:
-    st.error(f"Missing CSV file → {e.filename}")
+    st.error(f"Missing CSV: {e.filename}")
     st.stop()
 
-# ─────────────────────── Helper functions ────────────────────────────────
+# ── Helpers ───────────────────────────────────────────────────────────────
 
 def badge(delta_surplus: float) -> str:
     colour = "#228B22" if delta_surplus > 0 else "#C70039" if delta_surplus < 0 else "#666"
     sign   = "+" if delta_surplus > 0 else ""
     return (
-        f"<span style='background:{colour};color:#fff;padding:2px 6px;border-radius:4px;"
+        f"<span style='background:{colour};color:#fff;padding:2px 6px;border-radius:4px;" 
         f"font-size:0.9em'>{sign}{delta_surplus:.1f} bn</span>"
     )
 
@@ -45,7 +48,7 @@ def fmt_value(val: float, unit: str) -> str:
         return f"{unit}{int(round(val))}"
     return f"{val:g}{unit}"
 
-# ─────────────────────── Grouping rules ───────────────────────────────────
+# ── Grouping rules (same heuristic as before) ─────────────────────────────
 
 def tax_group(name: str) -> str:
     n = name.lower()
@@ -57,9 +60,9 @@ def tax_group(name: str) -> str:
         return "Corporation Tax"
     if name.startswith("VAT"):
         return "VAT"
-    if any(x in n for x in ["capital gains", "cgt"]):
+    if "capital gains" in n or "cgt" in n:
         return "Capital Gains Tax"
-    if any(x in n for x in ["inheritance", "iht"]):
+    if "inheritance" in n or "iht" in n:
         return "Inheritance Tax"
     if "ipt" in n:
         return "Insurance Premium Tax"
@@ -75,7 +78,7 @@ def spend_group(name: str) -> str:
         return "Health & Care"
     if any(x in n for x in ["school", "education", "childcare", "student", "skills"]):
         return "Education & Skills"
-    if any(x in n for x in ["pension"]):
+    if "pension" in n:
         return "Pensions"
     if any(x in n for x in ["universal credit", "benefit", "welfare", "disability"]):
         return "Welfare & Benefits"
@@ -91,8 +94,7 @@ def spend_group(name: str) -> str:
         return "Inter‑governmental & Other"
     return "Other programmes"
 
-# Build grouped dictionaries
-from collections import defaultdict
+# Build grouped dicts
 
 tax_groups   = defaultdict(list)
 for _, row in tax_df.iterrows():
@@ -102,36 +104,34 @@ spend_groups = defaultdict(list)
 for _, row in spend_df.iterrows():
     spend_groups[spend_group(row["name"])].append(row)
 
-# Storage for deltas
-st.session_state.setdefault("tax_changes", {})
-st.session_state.setdefault("spend_changes", {})
-
-# ─────────────────────── UI: Tabs & Expanders ─────────────────────────────
+# ── UI Layout ─────────────────────────────────────────────────────────────
 controls_col, results_col = st.columns([4, 2], gap="large")
 
 with controls_col:
-    tabs = st.tabs(["Tax", "Spend"])
+    tax_tab, spend_tab = st.tabs(["Tax", "Spend"])
 
-    # -------- TAX TAB --------
-    with tabs[0]:
-        st.caption("Adjust tax parameters. Revenue‑raising moves improve the surplus (green badge).")
-        for group_name in sorted(tax_groups):
-            with st.expander(group_name, expanded=False):
-                for row in tax_groups[group_name]:
+    # ================= TAX TAB =================
+    with tax_tab:
+        st.caption("Revenue‑raising moves improve the surplus (green badge).")
+        for gname in sorted(tax_groups):
+            with st.expander(gname, expanded=False):
+                for row in tax_groups[gname]:
                     baseline = row["baseline"]
                     unit_raw = row["unit"].strip()
                     min_d, max_d = int(row["min_change"]), int(row["max_change"])
+                    slider_key = f"tax_{row['name']}"
 
                     container = st.container()
-                    header_ph = container.empty()  # will sit above slider
+                    header_ph = container.empty()
+
+                    # Slider – relies on Streamlit to persist its own value
                     delta_units = container.slider(
                         label="", min_value=min_d, max_value=max_d,
-                        value=st.session_state["tax_changes"].get(row["name"], 0),
-                        key=f"tax_{row['name']}", label_visibility="collapsed",
+                        key=slider_key, label_visibility="collapsed",
                     )
-                    st.session_state["tax_changes"][row["name"]] = delta_units
 
-                    new_val       = baseline + delta_units
+                    # Header using current slider value
+                    new_val = baseline + delta_units
                     surplus_delta = delta_units * row["delta_per_unit"]
                     header_ph.markdown(
                         f"**{row['name']}**   <span style='color:grey'>{fmt_value(baseline, unit_raw)}</span> → "
@@ -139,38 +139,25 @@ with controls_col:
                         unsafe_allow_html=True,
                     )
 
-                    new_val       = baseline + delta_units
-                    surplus_delta = delta_units * row["delta_per_unit"]
-                    baseline_txt  = fmt_value(baseline, unit_raw)
-                    new_txt       = fmt_value(new_val, unit_raw)
-
-                    cols = st.columns([6,1])
-                    cols[0].markdown(
-                        f"<span style='color:grey'>{baseline_txt}</span> → "
-                        f"<span style='font-weight:700'>{new_txt}</span>",
-                        unsafe_allow_html=True,
-                    )
-                    cols[1].markdown(badge(surplus_delta), unsafe_allow_html=True)
-
-    # -------- SPEND TAB --------
-    with tabs[1]:
-        st.caption("Adjust programme spend. Cuts improve the surplus (green badge).")
-        for group_name in sorted(spend_groups):
-            with st.expander(group_name, expanded=False):
-                for row in spend_groups[group_name]:
+    # ================= SPEND TAB =================
+    with spend_tab:
+        st.caption("Cuts improve the surplus (green badge).")
+        for gname in sorted(spend_groups):
+            with st.expander(gname, expanded=False):
+                for row in spend_groups[gname]:
                     baseline = row["baseline"]
                     min_pct, max_pct = int(row["min_pct"]), int(row["max_pct"])
+                    slider_key = f"spend_{row['name']}"
 
                     container = st.container()
                     header_ph = container.empty()
+
                     pct_change = container.slider(
                         label="", min_value=min_pct, max_value=max_pct,
-                        value=int(st.session_state["spend_changes"].get(row["name"], 0)*100),
-                        key=f"spend_{row['name']}", format="%d%%", label_visibility="collapsed",
+                        key=slider_key, format="%d%%", label_visibility="collapsed",
                     )
-                    st.session_state["spend_changes"][row["name"]] = pct_change/100
 
-                    new_spend     = baseline * (1 + pct_change/100)
+                    new_spend = baseline * (1 + pct_change/100)
                     surplus_delta = -(new_spend - baseline)
                     header_ph.markdown(
                         f"**{row['name']}**   <span style='color:grey'>£{baseline:.0f}bn</span> → "
@@ -178,18 +165,28 @@ with controls_col:
                         unsafe_allow_html=True,
                     )
 
-# ─────────────────────── Calculations ─────────────────────────────────────
+# ── Calculations ──────────────────────────────────────────────────────────
+# Build change dicts directly from slider keys
 
-tax_delta   = compute_tax_delta(tax_df, st.session_state["tax_changes"])
-spend_delta = compute_spend_delta(spend_df, st.session_state["spend_changes"])
+tax_changes = {
+    row["name"]: st.session_state[f"tax_{row['name']}"]
+    for _, row in tax_df.iterrows()
+}
+spend_changes = {
+    row["name"]: st.session_state[f"spend_{row['name']}"] / 100
+    for _, row in spend_df.iterrows()
+}
 
-baseline_surplus = -BASELINE_DEFICIT  # -137 bn
+tax_delta   = compute_tax_delta(tax_df, tax_changes)
+spend_delta = compute_spend_delta(spend_df, spend_changes)
+
+baseline_surplus = -BASELINE_DEFICIT
 surplus_new      = baseline_surplus + tax_delta - spend_delta
 
 total_receipts_new  = tax_df["baseline_receipts"].sum() + OTHER_RECEIPTS + tax_delta
 programme_spend_new = spend_df["baseline"].sum() + spend_delta
 
-# ─────────────────────── Results panel ────────────────────────────────────
+# ── Results Panel ─────────────────────────────────────────────────────────
 with results_col:
     st.header("Headline")
     st.metric("Total receipts", f"£{total_receipts_new:,.0f} bn", f"{tax_delta:+,.1f}")
@@ -207,4 +204,4 @@ with results_col:
     fig.update_layout(title="Contribution to surplus (positive = improves)")
     st.plotly_chart(fig, use_container_width=True)
 
-st.caption("Badges show change to **surplus** (green = up, red = down). Baseline surplus −£137 bn.")
+st.caption("Badges show impact on **surplus** (green = up, red = down). Baseline surplus −£137 bn.")

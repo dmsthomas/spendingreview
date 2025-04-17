@@ -28,6 +28,27 @@ except FileNotFoundError as e:
 
 def make_badge(delta_surplus: float) -> str:
     colour = "#228B22" if delta_surplus > 0 else "#C70039" if delta_surplus < 0 else "#666"
+    sign   = "+" if delta_surplus > 0 else ""
+    return (
+        f"<span style='background:{colour};color:#fff;padding:2px 6px;border-radius:4px;"
+        f"font-size:0.9em'>{sign}{delta_surplus:.1f} bn</span>"
+    )
+
+# format helper ------------------------------------------------------------
+
+def fmt_value(val: float, unit: str) -> str:
+    """Human‑friendly header formatting.
+    • If unit contains "ppt" → show as integer %.
+    • If unit starts with "£" → keep unit and int.
+    • Otherwise fall back to g‑format + unit.
+    """
+    unit = unit.strip()
+    if "ppt" in unit:
+        return f"{int(round(val))}%"
+    if unit.startswith("£"):
+        return f"{unit}{int(round(val))}"
+    return f"{val:g}{unit}"
+    colour = "#228B22" if delta_surplus > 0 else "#C70039" if delta_surplus < 0 else "#666"
     sign   = "+" if delta_surplus > 0 else ""  # minus displayed automatically
     return (
         f"<span style='background:{colour};color:#fff;padding:2px 6px;border-radius:4px;" 
@@ -42,20 +63,24 @@ with controls_col:
     tax_changes = {}
     for idx, row in tax_df.iterrows():
         baseline   = row["baseline"]
-        unit       = row["unit"].strip()
+        unit_raw   = row["unit"].strip()
         min_d, max_d = int(row["min_change"]), int(row["max_change"])
 
         container = st.container()
-        header_ph = container.empty()  # placeholder for header line
+        header_ph = container.empty()
         delta_units = container.slider(
             label="", min_value=min_d, max_value=max_d, value=0,
             key=f"tax_{idx}", label_visibility="collapsed",
         )
         new_val = baseline + delta_units
-        surplus_delta = delta_units * row["delta_per_unit"]  # revenue ↑ -> surplus ↑
+        surplus_delta = delta_units * row["delta_per_unit"]
+
+        baseline_txt = fmt_value(baseline, unit_raw)
+        new_txt      = fmt_value(new_val, unit_raw)
+
         header_ph.markdown(
-            f"**{row['name']}**   <span style='color:grey'>{baseline:g}{unit}</span> → "
-            f"<span style='font-weight:700'>{new_val:g}{unit}</span>  " + make_badge(surplus_delta),
+            f"**{row['name']}**   <span style='color:grey'>{baseline_txt}</span> → "
+            f"<span style='font-weight:700'>{new_txt}</span>  " + make_badge(surplus_delta),
             unsafe_allow_html=True,
         )
         tax_changes[row["name"]] = delta_units
@@ -73,14 +98,14 @@ with controls_col:
             key=f"spend_{idx}", format="%d%%", label_visibility="collapsed",
         )
         new_spend = baseline * (1 + pct_change/100)
-        surplus_delta = -(new_spend - baseline)  # spend ↑ => surplus ↓
+        surplus_delta = -(new_spend - baseline)
+
         header_ph.markdown(
             f"**{row['name']}**   <span style='color:grey'>£{baseline:.0f}bn</span> → "
-            f"<span style='font-weight:700'>£{new_spend:.1f}bn</span>  " + make_badge(surplus_delta),
+            f"<span style='font-weight:700'>£{new_spend:.0f}bn</span>  " + make_badge(surplus_delta),
             unsafe_allow_html=True,
         )
         spend_changes[row["name"]] = pct_change/100
-
 # ── calculations ──────────────────────────────────────────────────────────
 
 tax_delta   = compute_tax_delta(tax_df, tax_changes)

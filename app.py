@@ -129,9 +129,12 @@ with controls_col:
                     delta_units = container.slider(
                         "", min_d, max_d,
                         value=st.session_state.get(slider_key, 0),
+                        key=slider_key,
+                        label_visibility="collapsed",
+                    ),
                         key=slider_key, label_visibility="collapsed",                              
                     )
-                    
+                    )
 
                     # Header using current slider value
                     new_val = baseline + delta_units
@@ -156,11 +159,15 @@ with controls_col:
                     header_ph = container.empty()
 
                     pct_change = container.slider(
-                        "", min_pct, max_pct,
-                        value=st.session_state.get(slider_key, 0),
+                        "", min_value=min_pct, max_value=max_pct,
+                        value=int(st.session_state.get(slider_key, 0)*100),
+                        key=slider_key,
+                        format="%d%%",
+                        label_visibility="collapsed",
+                    ),
                         key=slider_key, format="%d%%", label_visibility="collapsed",                              
                     )
-                    
+                    )
 
                     new_spend = baseline * (1 + pct_change/100)
                     surplus_delta = -(new_spend - baseline)

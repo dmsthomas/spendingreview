@@ -1,3 +1,4 @@
+# >>> file: app.py >>>
 """Streamlit app – v1.5
 • Two tabs (Tax / Spend) with grouped sliders in expanders
 • Header shows baseline → new and surplus badge *above* each slider
@@ -126,8 +127,10 @@ with controls_col:
 
                     # Slider – relies on Streamlit to persist its own value
                     delta_units = container.slider(
-                        label="", min_value=min_d, max_value=max_d,
-                        key=slider_key, label_visibility="collapsed",
+                        "", min_d, max_d,
+                        value=st.session_state.get(slider_key, 0),
+                        key=slider_key, label_visibility="collapsed",                              
+                    )
                     )
 
                     # Header using current slider value
@@ -153,8 +156,10 @@ with controls_col:
                     header_ph = container.empty()
 
                     pct_change = container.slider(
-                        label="", min_value=min_pct, max_value=max_pct,
-                        key=slider_key, format="%d%%", label_visibility="collapsed",
+                        "", min_pct, max_pct,
+                        value=st.session_state.get(slider_key, 0),
+                        key=slider_key, format="%d%%", label_visibility="collapsed",                              
+                    )
                     )
 
                     new_spend = baseline * (1 + pct_change/100)
@@ -205,3 +210,4 @@ with results_col:
     st.plotly_chart(fig, use_container_width=True)
 
 st.caption("Badges show impact on **surplus** (green = up, red = down). Baseline surplus −£137 bn.")
+# <<< end of app.py <<<

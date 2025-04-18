@@ -166,53 +166,71 @@ with tabs[1]:
 with tabs[2]:
     st.header("Results Overview: Change by Category")
     # Aggregate category deltas
-    tax_cat = {grp: sum(
-        st.session_state.get(f"tax_{r['name']}", 0) * r['delta_per_unit']
-        for r in rows
-    ) for grp, rows in tax_groups.items()}
-    spend_cat = {grp: sum(
-        (st.session_state.get(f"spend_{r['name']}", 0) / 100) * r['baseline']
-        for r in rows
-    ) for grp, rows in spend_groups.items()}
+    tax_cat = {
+        grp: sum(
+            st.session_state.get(f"tax_{r['name']}", 0) * r['delta_per_unit']
+            for r in rows
+        ) for grp, rows in tax_groups.items()
+    }
+    spend_cat = {
+        grp: sum(
+            (st.session_state.get(f"spend_{r['name']}", 0) / 100) * r['baseline']
+            for r in rows
+        ) for grp, rows in spend_groups.items()
+    }
 
-    # Side-by-side vertical stacked bars
-    chart_col1, chart_col2 = st.columns(2)
-    with chart_col1:
-        st.subheader("Tax change by category")
-        fig1 = go.Figure()
-        for grp, val in tax_cat.items():
-            fig1.add_trace(go.Bar(name=grp, x=[""], y=[val]))
-        fig1.update_layout(
-            barmode='stack',
-            xaxis=dict(visible=False),
-            yaxis_title='Δ £bn'
-        )
-        st.plotly_chart(fig1, use_container_width=True)
-    with chart_col2:
-        st.subheader("Spend change by category")
-        fig2 = go.Figure()
-        for grp, val in spend_cat.items():
-            fig2.add_trace(go.Bar(name=grp, x=[""], y=[-val]))
-        fig2.update_layout(
-            barmode='stack',
-            xaxis=dict(visible=False),
-            yaxis_title='Δ £bn'
-        )
-        st.plotly_chart(fig2, use_container_width=True)
+    # Side-by-side vertical stacked bars with shared y-axis
+    from plotly.subplots import make_subplots
 
-    # Summary tables beneath charts
+    fig = make_subplots(
+        rows=1, cols=2,
+        shared_yaxes=True,
+        subplot_titles=("Tax Δ £bn", "Spend Δ £bn")
+    )
+    # Tax plot (col 1)
+    for grp, val in tax_cat.items():
+        fig.add_trace(
+            go.Bar(name=grp, x=["Tax"], y=[val]),
+            row=1, col=1
+        )
+    # Spend plot (col 2)
+    for grp, val in spend_cat.items():
+        fig.add_trace(
+            go.Bar(name=grp, x=["Spend"], y=[-val], showlegend=False),
+            row=1, col=2
+        )
+    fig.update_layout(
+        barmode='stack',
+        showlegend=True,
+        legend_title_text='Category'
+    )
+    fig.update_xaxes(visible=False)
+    fig.update_yaxes(title_text='Δ £bn')
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Summary tables side by side
     table_col1, table_col2 = st.columns(2)
-    with table_col1:
-        df_tax = pd.DataFrame(
+    df_tax = (
+        pd.DataFrame(
             [(grp, val) for grp, val in tax_cat.items()],
             columns=['Category', 'Δ £bn']
-        ).sort_values('Δ £bn', ascending=False)
-        st.table(df_tax.reset_index(drop=True))
-    with table_col2:
-        df_spend = pd.DataFrame(
+        )
+        .sort_values('Δ £bn', ascending=False)
+        .reset_index(drop=True)
+    )
+    df_spend = (
+        pd.DataFrame(
             [(grp, -val) for grp, val in spend_cat.items()],
             columns=['Category', 'Δ £bn']
-        ).sort_values('Δ £bn', ascending=False)
-        st.table(df_spend.reset_index(drop=True))
+        )
+        .sort_values('Δ £bn', ascending=False)
+        .reset_index(drop=True)
+    )
+    with table_col1:
+        st.subheader("Tax summary")
+        st.table(df_tax)
+    with table_col2:
+        st.subheader("Spend summary")
+        st.table(df_spend)
 
-st.caption(f"Baseline surplus: £{-BASELINE_DEFICIT:,.0f} bn → New surplus: £{surplus_new:,.0f} bn.")
+st.caption(f"Baseline surplus: £{-BASELINE_DEFICIT:,.0f} bn → New surplus: £{surplus_new:,.0f} bn.")(f"Baseline surplus: £{-BASELINE_DEFICIT:,.0f} bn → New surplus: £{surplus_new:,.0f} bn.")

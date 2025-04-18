@@ -128,34 +128,53 @@ surplus_new = baseline_surplus + tax_delta - spend_delta
 with tabs[2]:
     st.header("Results Overview: Change by Category")
     # Aggregate category deltas
-tax_cat = {grp: sum(st.session_state.get(f"tax_{r['name']}",0)*r['delta_per_unit'] for r in rows) for grp,rows in tax_groups.items()}
-spend_cat = {grp: sum((st.session_state.get(f"spend_{r['name']}",0)/100)*r['baseline'] for r in rows) for grp,rows in spend_groups.items()}
+    tax_cat = {grp: sum(
+        st.session_state.get(f"tax_{r['name']}", 0) * r['delta_per_unit']
+        for r in rows
+    ) for grp, rows in tax_groups.items()}
+    spend_cat = {grp: sum(
+        (st.session_state.get(f"spend_{r['name']}", 0) / 100) * r['baseline']
+        for r in rows
+    ) for grp, rows in spend_groups.items()}
 
-    # Side-by-side charts
+    # Side-by-side vertical stacked bars
     chart_col1, chart_col2 = st.columns(2)
     with chart_col1:
         st.subheader("Tax change by category")
         fig1 = go.Figure()
         for grp, val in tax_cat.items():
-            fig1.add_trace(go.Bar(name=grp, x=["Tax"], y=[val]))
-        fig1.update_layout(barmode='stack', showlegend=True, xaxis={'visible':False})
+            fig1.add_trace(go.Bar(name=grp, x=[""], y=[val]))
+        fig1.update_layout(
+            barmode='stack',
+            xaxis=dict(visible=False),
+            yaxis_title='Δ £bn'
+        )
         st.plotly_chart(fig1, use_container_width=True)
     with chart_col2:
         st.subheader("Spend change by category")
         fig2 = go.Figure()
         for grp, val in spend_cat.items():
-            fig2.add_trace(go.Bar(name=grp, x=["Spend"], y=[-val]))
-        fig2.update_layout(barmode='stack', showlegend=True, xaxis={'visible':False})
+            fig2.add_trace(go.Bar(name=grp, x=[""], y=[-val]))
+        fig2.update_layout(
+            barmode='stack',
+            xaxis=dict(visible=False),
+            yaxis_title='Δ £bn'
+        )
         st.plotly_chart(fig2, use_container_width=True)
 
-    # Summary tables
+    # Summary tables beneath charts
     table_col1, table_col2 = st.columns(2)
-    df_tax = pd.DataFrame([{'Category':grp,'Δ £bn':v} for grp,v in tax_cat.items()])
-    df_spend = pd.DataFrame([{'Category':grp,'Δ £bn':-v} for grp,v in spend_cat.items()])
     with table_col1:
-        st.table(df_tax.sort_values('Δ £bn', ascending=False).reset_index(drop=True))
+        df_tax = pd.DataFrame(
+            [(grp, val) for grp, val in tax_cat.items()],
+            columns=['Category', 'Δ £bn']
+        ).sort_values('Δ £bn', ascending=False)
+        st.table(df_tax.reset_index(drop=True))
     with table_col2:
-        st.table(df_spend.sort_values('Δ £bn', ascending=False).reset_index(drop=True))
+        df_spend = pd.DataFrame(
+            [(grp, -val) for grp, val in spend_cat.items()],
+            columns=['Category', 'Δ £bn']
+        ).sort_values('Δ £bn', ascending=False)
+        st.table(df_spend.reset_index(drop=True))
 
-st.caption(f"Baseline surplus: £{baseline_surplus:,.0f}bn → New surplus: £{surplus_new:,.0f}bn.")
-# <<< end of app.py <<<
+st.caption(f"Baseline surplus: £{-BASELINE_DEFICIT:,.0f} bn → New surplus: £{surplus_new:,.0f} bn.")

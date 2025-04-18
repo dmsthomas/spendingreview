@@ -251,7 +251,7 @@ with results_tab:
         columns=['Category', 'Δ £bn']
     ).sort_values('Δ £bn', ascending=False).reset_index(drop=True)
     df_spend = pd.DataFrame(
-        [(grp, -val) for grp, val in spend_cat.items()],
+        [(grp, val) for grp, val in spend_cat.items()],
         columns=['Category', 'Δ £bn']
     ).sort_values('Δ £bn', ascending=False).reset_index(drop=True)
     with table_col1:

@@ -93,10 +93,18 @@ surplus_new = baseline_surplus + tax_delta - spend_delta
 total_receipts_new = tax_df["baseline_receipts"].sum() + OTHER_RECEIPTS + tax_delta
 programme_spend_new = spend_df["baseline"].sum() + spend_delta
 
+# Initialize slider state defaults
+for _, r in tax_df.iterrows():
+    key = f"tax_{r['name']}"
+    if key not in st.session_state:
+        st.session_state[key] = 0
+for _, r in spend_df.iterrows():
+    key = f"spend_{r['name']}"
+    if key not in st.session_state:
+        st.session_state[key] = 0
+
 # Tabs layout
 tabs = st.tabs(["Tax", "Spend", "Results"])
-
-# --- TAX tab
 with tabs[0]:
     st.header("Tax settings & summary")
     col1, col2 = st.columns([4, 2])

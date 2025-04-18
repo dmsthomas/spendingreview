@@ -80,42 +80,8 @@ for _, r in tax_df.iterrows(): tax_groups[tax_group(r["name"])].append(r)
 spend_groups = defaultdict(list)
 for _, r in spend_df.iterrows(): spend_groups[spend_group(r["name"])].append(r)
 
-# Tabs layout
-tabs = st.tabs(["Tax", "Spend", "Results"])
+# Calculate changes & totals
 
-# --- TAX tab
-with tabs[0]:
-    st.caption("Revenue-raising moves improve surplus (green badge).")
-    for grp, rows in tax_groups.items():
-        with st.expander(grp, expanded=False):
-            for r in rows:
-                key = f"tax_{r['name']}"
-                baseline = r['baseline']; unit = r['unit']
-                min_d, max_d = int(r['min_change']), int(r['max_change'])
-                # slider
-                delta = st.slider("", min_d, max_d, value=st.session_state.get(key, 0), key=key, label_visibility="collapsed")
-                # header
-                newv = baseline + delta
-                sup_delta = delta * r['delta_per_unit']
-                st.markdown(f"**{r['name']}**  <span style='color:grey'>{fmt_value(baseline,unit)}</span> → <span style='font-weight:700'>{fmt_value(newv,unit)}</span> {badge(sup_delta)}", unsafe_allow_html=True)
-
-# --- SPEND tab
-with tabs[1]:
-    st.caption("Programme spend adjustments: cuts improve surplus (green badge).")
-    for grp, rows in spend_groups.items():
-        with st.expander(grp, expanded=False):
-            for r in rows:
-                key = f"spend_{r['name']}"
-                baseline = r['baseline']
-                min_p, max_p = int(r['min_pct']), int(r['max_pct'])
-                # slider
-                pct = st.slider("", min_p, max_p, value=st.session_state.get(key, 0), key=key, format="%d%%", label_visibility="collapsed")
-                # header
-                newsp = baseline * (1 + pct/100)
-                sup_delta = -(newsp - baseline)
-                st.markdown(f"**{r['name']}**  <span style='color:grey'>£{baseline:.0f}bn</span> → <span style='font-weight:700'>£{newsp:.0f}bn</span> {badge(sup_delta)}", unsafe_allow_html=True)
-
-# Collect changes
 tax_changes = {r['name']: st.session_state.get(f"tax_{r['name']}", 0) for _, r in tax_df.iterrows()}
 spend_changes = {r['name']: st.session_state.get(f"spend_{r['name']}", 0)/100 for _, r in spend_df.iterrows()}
 
@@ -123,6 +89,78 @@ tax_delta = compute_tax_delta(tax_df, tax_changes)
 spend_delta = compute_spend_delta(spend_df, spend_changes)
 baseline_surplus = -BASELINE_DEFICIT
 surplus_new = baseline_surplus + tax_delta - spend_delta
+
+total_receipts_new = tax_df["baseline_receipts"].sum() + OTHER_RECEIPTS + tax_delta
+programme_spend_new = spend_df["baseline"].sum() + spend_delta
+
+# Tabs layout
+tabs = st.tabs(["Tax", "Spend", "Results"])
+
+# --- TAX tab
+with tabs[0]:
+    st.header("Tax settings & summary")
+    col1, col2 = st.columns([4, 2])
+    with col1:
+        st.caption("Revenue-raising moves improve surplus (green badge).")
+        for grp, rows in tax_groups.items():
+            with st.expander(grp, expanded=False):
+                for r in rows:
+                    key = f"tax_{r['name']}"
+                    baseline = r['baseline']; unit = r['unit']
+                    min_d, max_d = int(r['min_change']), int(r['max_change'])
+                    # Header above slider
+                    delta_prev = st.session_state.get(key, 0)
+                    newv = baseline + delta_prev
+                    supd = delta_prev * r['delta_per_unit']
+                    st.markdown(
+                        f"**{r['name']}**  " \
+                        f"<span style='color:grey'>{fmt_value(baseline,unit)}</span> → " \
+                        f"<span style='font-weight:700'>{fmt_value(newv,unit)}</span> {badge(supd)}",
+                        unsafe_allow_html=True,
+                    )
+                    # Slider
+                    st.slider(
+                        "", min_d, max_d,
+                        value=delta_prev,
+                        key=key,
+                        label_visibility="collapsed"
+                    )
+    with col2:
+        st.subheader("Summary")
+        st.metric("Total receipts", f"£{total_receipts_new:,.0f} bn", f"{tax_delta:+,.1f}")
+        st.metric("Programme spend", f"£{programme_spend_new:,.0f} bn", f"{-spend_delta:+,.1f}")
+        st.metric("Surplus (+) / Deficit (−)", f"£{surplus_new:,.0f} bn", f"{surplus_new-baseline_surplus:+,.1f}")
+
+# --- SPEND tab
+with tabs[1]:
+    st.header("Spend settings & summary")
+    col1, col2 = st.columns([4, 2])
+    with col1:
+        st.caption("Programme spend adjustments: cuts improve surplus (green badge).")
+        for grp, rows in spend_groups.items():
+            with st.expander(grp, expanded=False):
+                for r in rows:
+                    key = f"spend_{r['name']}"
+                    baseline = r['baseline']
+                    min_p, max_p = int(r['min_pct']), int(r['max_pct'])
+                    # Header above slider
+                    pct_prev = int(st.session_state.get(key, 0)*100)
+                    newsp = baseline * (1 + pct_prev/100)
+                    supd = -(newsp - baseline)
+                    st.markdown(
+                        f"**{r['name']}**  " \
+                        f"<span style='color:grey'>£{baseline:.0f}bn</span> → " \
+                        f"<span style='font-weight:700'>£{newsp:.0f}bn</span> {badge(supd)}",
+                        unsafe_allow_html=True,
+                    )
+                    # Slider
+                    st.slider(
+                        "", min_p, max_p,
+                        value=pct_prev,
+                        key=key,
+                        format="%d%%",
+                        label_visibility="collapsed"
+                    )
 
 # --- RESULTS tab
 with tabs[2]:

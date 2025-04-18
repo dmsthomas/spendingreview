@@ -144,31 +144,39 @@ with tabs[1]:
     st.header("Spend settings & summary")
     col1, col2 = st.columns([4, 2])
     with col1:
-        st.caption("Programme spend adjustments: cuts improve surplus (green badge).")
+        st.caption("Programme spend adjustments: cuts improve the surplus (green badge).")
         for grp, rows in spend_groups.items():
             with st.expander(grp, expanded=False):
                 for r in rows:
                     key = f"spend_{r['name']}"
                     baseline = r['baseline']
-                    min_p, max_p = int(r['min_pct']), int(r['max_pct'])
+                    min_p = int(r['min_pct']); max_p = int(r['max_pct'])
                     # Header above slider
-                    pct_prev = int(st.session_state.get(key, 0)*100)
-                    newsp = baseline * (1 + pct_prev/100)
+                    pct_prev = st.session_state.get(key, 0)
+                    newsp = baseline * (1 + pct_prev / 100)
                     supd = -(newsp - baseline)
                     st.markdown(
-                        f"**{r['name']}**  " \
-                        f"<span style='color:grey'>£{baseline:.0f}bn</span> → " \
-                        f"<span style='font-weight:700'>£{newsp:.0f}bn</span> {badge(supd)}",
+                        f"**{r['name']}**   "
+                        f"<span style='color:grey'>£{baseline:.0f} bn</span> → "
+                        f"<span style='font-weight:700'>£{newsp:.0f} bn</span> " + badge(supd),
                         unsafe_allow_html=True,
                     )
-                    # Slider
-                    st.slider(
-                        "", min_p, max_p,
-                        value=pct_prev,
+                    # Slider with explicit value to avoid jumping to max
+                    pct = st.slider(
+                        "",
+                        min_p,
+                        max_p,
+                        st.session_state.get(key, 0),  # value argument
                         key=key,
                         format="%d%%",
                         label_visibility="collapsed"
                     )
+                    # session_state updated automatically via key
+    with col2:
+        st.subheader("Summary")
+        st.metric("Total receipts", f"£{total_receipts_new:,.0f} bn", f"{tax_delta:+.1f}")
+        st.metric("Programme spend", f"£{programme_spend_new:,.0f} bn", f"{-spend_delta:+.1f}")
+        st.metric("Surplus (+) / Deficit (−)", f"£{surplus_new:,.0f} bn", f"{surplus_new-baseline_surplus:+.1f}")
 
 # --- RESULTS tab
 with tabs[2]:

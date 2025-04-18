@@ -215,20 +215,34 @@ with results_tab:
         (st.session_state.get(f"spend_{r['name']}", 0) / 100) * r['baseline'] for r in rows
     ) for grp, rows in spend_groups.items()}
 
-    # Shared stacked bar chart
-    fig = make_subplots(
-        rows=1, cols=2,
-        shared_yaxes=True,
-        subplot_titles=("Tax Δ £bn", "Spend Δ £bn")
-    )
-    for grp, val in tax_cat.items():
-        fig.add_trace(go.Bar(name=grp, x=[""], y=[val]), row=1, col=1)
-    for grp, val in spend_cat.items():
-        fig.add_trace(go.Bar(name=grp, x=[""], y=[-val], showlegend=False), row=1, col=2)
-    fig.update_layout(barmode='stack', showlegend=True, legend_title_text='Category')
-    fig.update_xaxes(visible=False)
-    fig.update_yaxes(title_text='Δ £bn')
-    st.plotly_chart(fig, use_container_width=True)
+        # Side-by-side stacked bar charts with individual legends and positive values for both
+    chart_col1, chart_col2 = st.columns(2, gap="large")
+    with chart_col1:
+        st.subheader("Tax change by category")
+        fig_tax = go.Figure()
+        for grp, val in tax_cat.items():
+            fig_tax.add_trace(go.Bar(name=grp, x=[""], y=[val]))
+        fig_tax.update_layout(
+            barmode='stack',
+            showlegend=True,
+            legend=dict(x=1.0, y=1.0),
+            xaxis=dict(visible=False),
+            yaxis=dict(title='Δ £bn')
+        )
+        st.plotly_chart(fig_tax, use_container_width=True)
+    with chart_col2:
+        st.subheader("Spend change by category")
+        fig_spend = go.Figure()
+        for grp, val in spend_cat.items():
+            fig_spend.add_trace(go.Bar(name=grp, x=[""], y=[val]))
+        fig_spend.update_layout(
+            barmode='stack',
+            showlegend=True,
+            legend=dict(x=1.0, y=1.0),
+            xaxis=dict(visible=False),
+            yaxis=dict(title='Δ £bn')
+        )
+        st.plotly_chart(fig_spend, use_container_width=True)
 
     # Summary tables
     table_col1, table_col2 = st.columns(2)

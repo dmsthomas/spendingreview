@@ -143,7 +143,7 @@ with tab_tax:
                     sup_delta = slider_val * r['delta_per_unit']
 
                     # Build tooltip-safe HTML
-                    tooltip = note.replace('"', '&quot;')
+                    tooltip = str(note).replace('"', '&quot;'))
                     header_html = (
                         f"<span title=\"{tooltip}\">ℹ️</span> <strong>{r['name']}</strong> "
                         + f"<span style='color:grey'>{fmt_value(baseline, unit)}</span> -> "
@@ -152,11 +152,11 @@ with tab_tax:
                     )
                     header_ph.markdown(header_html, unsafe_allow_html=True)
     with c2:
-        st.metric("Total receipts", f"£{total_receipts_new:,.0f} bn", f"{tax_delta:+.1f}")
-        st.metric("Programme spend", f"£{programme_spend_new:,.0f} bn", f"{-spend_delta:+.1f}")
+        st.metric("Total receipts", f"£{total_receipts_new:,.0f} bn", f"{tax_delta:+.1f}")
+        st.metric("Programme spend", f"£{programme_spend_new:,.0f} bn", f"{-spend_delta:+.1f}")
         st.metric(
             "Surplus (+) / Deficit (−)",
-            f"£{surplus_new:,.0f} bn",
+            f"£{surplus_new:,.0f} bn",
             f"{surplus_new - baseline_surplus:+.1f}", delta_color="normal"
         )
 
@@ -182,7 +182,7 @@ with tab_spend:
                     )
                     newsp = baseline * (1 + slider_val / 100)
                     sup_delta = -(newsp - baseline)
-                    tooltip = note.replace("'", "&#39;")
+                    tooltip = str(note).replace("'", "&#39;")
                     header_ph.markdown(
                         f"<span title=\"{tooltip}\">ℹ️</span> **{r['name']}**  "
                         f"<span style='color:grey'>{fmt_value(baseline, unit)}</span> → "

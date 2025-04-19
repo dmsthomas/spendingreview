@@ -1,0 +1,30 @@
+name,unit,baseline,delta_per_unit,min_change,max_change,note
+Income Tax basic rate,1 ppt,20,6.55,-10,10,
+Income Tax higher rate,1 ppt,40,1.45,-10,10,
+Income Tax additional rate,1 ppt,45,0.45,-10,10,
+Personal Allowance threshold,£100 ,12500,-0.65,-20,20,
+NICs employee main rate,1 ppt,12,5.05,-10,10,
+NICs employee additional rate,1 ppt,2,0.45,-2,10,
+NICs employer rate,1 ppt,13.8,5.5,-10,10,
+NICs self-employed main rate,1 ppt,9,0.7,-9,10,
+NICs self-employed additional rate,1 ppt,2,0.05,-2,10,
+Corporation Tax main rate,1 ppt,25,3.6,-10,10,
+VAT standard rate,1 ppt,20,8.55,-10,10,
+VAT reduced rate,1 ppt,5,0.55,-5,10,
+CGT main rate,1 ppt,10,0.1,-10,10,
+CGT residential property rate,1 ppt,18,0.15,-10,10,
+IHT rate,1 ppt,40,0.45,-10,10,
+IHT rate band,£5k,325000,-0.05,-20,20,
+IPT standard rate,1 ppt,12,0.2,-10,10,
+IPT higher rate,1 ppt,20,0.05,-10,10,
+SDLT 2% band,1 ppt,2,0.25,-2,10,
+SDLT 5% band,1 ppt,5,0.5,-5,5,
+Beer & cider duty (% change to current rate),1%,0,0.05,-20,20,Current typical rate is 57p/pint.
+Wine duty (% change to current rate),1%,0,0.03,-20,20,Current typical rate is £2.61/bottle.
+Spirits duty (% change to current rate),1%,0,0.02,-20,20,Current typical rate is £9.30/bottle.
+Tobacco duty (% change to current rate),1%,0,0.1,-20,20,Current typical rate is £8.94/pack of 20.
+Fuel duty petrol (% change to current rate),1%,52.95,0.48,-20,20,Current typical rate is 52.95p/litre.
+Fuel duty diesel (% change to current rate),1%,53.95,0.48,-20,20,Current typical rate is 52.95p/litre.
+Climate Change Levy (% change to current rate),1%,18,0.02,-20,20,Current typical rate is £0.00775/kWH of business electricity.
+Vehicle Excise Duty,£5 ,130,0.1,-20,20,Shows impact of adding £5 to cars and £1 to motorbikes. Figures illustrate the duty on a car emitting 51 to 75 g/km of carbon dioxide.
+Air Passenger Duty,£1 ,13,0.13,-20,20,Shows impact of amending the reduced band (for economy class seats). Figures illustrate the duty on a Band A flight to Europe.

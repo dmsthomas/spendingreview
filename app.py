@@ -130,7 +130,7 @@ with tab_tax:
                     baseline, unit, note = r['baseline'], r['unit'], r.get('note','')
                     step = parse_step(unit)
 
-                    # Slider + tooltip header
+                    # Slider + header
                     container = st.container()
                     header_ph = container.empty()
                     slider_val = container.slider(
@@ -141,26 +141,22 @@ with tab_tax:
                     )
                     new_val = baseline + slider_val * step
                     sup_delta = slider_val * r['delta_per_unit']
-                    # Escape single quotes in tooltip
-                    tooltip = note.replace("'", "&#39;")
-                    header_ph.markdown(
-                        f"<span title='{tooltip}'>ℹ️</span> **{r['name']}**  "
-                        f"<span style='color:grey'>{fmt_value(baseline, unit)}</span> -> "
-                        f"<span style='font-weight:700'>{fmt_value(new_val, unit)}</span> {badge(sup_delta)}",
-                        unsafe_allow_html=True,
-                    )}</span> → "
-                        f"<span style='font-weight:700'>{fmt_value(new_val, unit)}</span> {badge(sup_delta)}",
-                        unsafe_allow_html=True,
-                    )}</span> → "
-                        f"<span style='font-weight:700'>{fmt_value(new_val, unit)}</span> {badge(sup_delta)}",
-                        unsafe_allow_html=True,
+
+                    # Build tooltip-safe HTML
+                    tooltip = note.replace('"', '&quot;')
+                    header_html = (
+                        f"<span title=\"{tooltip}\">ℹ️</span> <strong>{r['name']}</strong> "
+                        + f"<span style='color:grey'>{fmt_value(baseline, unit)}</span> -> "
+                        + f"<span style='font-weight:700'>{fmt_value(new_val, unit)}</span> "
+                        + badge(sup_delta)
                     )
+                    header_ph.markdown(header_html, unsafe_allow_html=True)
     with c2:
-        st.metric("Total receipts", f"£{total_receipts_new:,.0f} bn", f"{tax_delta:+.1f}")
-        st.metric("Programme spend", f"£{programme_spend_new:,.0f} bn", f"{-spend_delta:+.1f}")
+        st.metric("Total receipts", f"£{total_receipts_new:,.0f} bn", f"{tax_delta:+.1f}")
+        st.metric("Programme spend", f"£{programme_spend_new:,.0f} bn", f"{-spend_delta:+.1f}")
         st.metric(
             "Surplus (+) / Deficit (−)",
-            f"£{surplus_new:,.0f} bn",
+            f"£{surplus_new:,.0f} bn",
             f"{surplus_new - baseline_surplus:+.1f}", delta_color="normal"
         )
 

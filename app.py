@@ -143,8 +143,7 @@ with tab_tax:
                         min_value=int(r['min_change']), max_value=int(r['max_change']),
                         value=tax_changes[r['name']],
                         key=key,
-                        label_visibility="collapsed",
-                        help=r.get('note', '')
+                        label_visibility="collapsed"
                     )
                     new_val = baseline + slider_val * step
                     sup_delta = slider_val * r['delta_per_unit']

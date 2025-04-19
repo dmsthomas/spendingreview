@@ -49,10 +49,11 @@ def badge(delta_surplus: float) -> str:
 
 def fmt_value(val: float, unit: str) -> str:
     unit = unit.strip()
-    if "ppt" in unit:
+    if "ppt" in unit or "%" in unit:
         return f"{int(round(val))}%"
     if unit.startswith("£"):
-        return f"{unit}{int(round(val))}"
+        # Format as full currency (with commas), ignoring the unit string
+        return f"£{val:,.0f}"
     return f"{val:g}{unit}"
 
 # Grouping logic
@@ -133,7 +134,17 @@ with tax_tab:
 
                     # Header above slider
                     delta_prev = st.session_state.get(key, 0)
-                    new_val = baseline + delta_prev
+                    # inside the loop over tax_groups:
+                    unit_raw = r['unit'].strip()
+                    if unit_raw.startswith("£"):
+                        try:
+                            step_size = float(unit_raw.replace("£",""))
+                        except:
+                            step_size = 1.0
+                        else:
+                            step_size = 1.0
+                    delta_prev = st.session_state.get(key, 0)
+                    new_val = baseline + delta_prev * step_size
                     sup_delta = delta_prev * r['delta_per_unit']
                     st.markdown(
                         f"**{r['name']}**   "

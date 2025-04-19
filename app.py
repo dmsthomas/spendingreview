@@ -110,39 +110,83 @@ tab_tax, tab_spend, tab_results = st.tabs(["Tax","Spend","Results"])
 # --- Tax Tab
 with tab_tax:
     st.header("Tax settings & summary")
-    c1,c2 = st.columns([4,2])
+    c1, c2 = st.columns([4, 2])
     with c1:
         st.markdown("Revenue-raising moves improve surplus (green badge).")
-        for grp,rows in tax_groups.items():
+        for grp, rows in tax_groups.items():
             with st.expander(grp):
                 for r in rows:
-                    key=f"tax_{r['name']}"; base,unit=r['baseline'],r['unit']
-                    prev=st.slider(label=r['name'],min_value=int(r['min_change']),max_value=int(r['max_change']),value=tax_changes[r['name']],key=key,label_visibility="collapsed")
-                    newv=base+prev
-                    st.markdown(f"**{r['name']}**  <span style='color:grey'>{fmt_value(base,unit)}</span> → <span style='font-weight:700'>{fmt_value(newv,unit)}</span> {badge(prev*r['delta_per_unit'])}",unsafe_allow_html=True)
+                    key = f"tax_{r['name']}"
+                    baseline, unit = r['baseline'], r['unit']
+
+                    # Header + slider in one container to place header above
+                    container = st.container()
+                    header_ph = container.empty()
+                    slider_val = container.slider(
+                        label=r['name'],
+                        min_value=int(r['min_change']), max_value=int(r['max_change']),
+                        value=tax_changes[r['name']],
+                        key=key,
+                        label_visibility="collapsed",
+                    )
+                    new_val = baseline + slider_val
+                    sup_delta = slider_val * r['delta_per_unit']
+                    header_ph.markdown(
+                        f"**{r['name']}**   "
+                        f"<span style='color:grey'>{fmt_value(baseline, unit)}</span> → "
+                        f"<span style='font-weight:700'>{fmt_value(new_val, unit)}</span> {badge(sup_delta)}",
+                        unsafe_allow_html=True,
+                    )
     with c2:
-        st.metric("Total receipts",f"£{total_receipts_new:,.0f} bn",f"{tax_delta:+.1f}")
-        st.metric("Programme spend",f"£{programme_spend_new:,.0f} bn",f"{-spend_delta:+.1f}")
-        st.metric("Surplus (+) / Deficit (−)",f"£{surplus_new:,.0f} bn",f"{surplus_new-baseline_surplus:+.1f}",delta_color="normal")
+        st.metric("Total receipts", f"£{total_receipts_new:,.0f} bn", f"{tax_delta:+.1f}")
+        st.metric("Programme spend", f"£{programme_spend_new:,.0f} bn", f"{-spend_delta:+.1f}")
+        st.metric(
+            "Surplus (+) / Deficit (−)",
+            f"£{surplus_new:,.0f} bn",
+            f"{surplus_new-baseline_surplus:+.1f}",
+            delta_color="normal"
+        )
 
 # --- Spend Tab
 with tab_spend:
     st.header("Spend settings & summary")
-    c1,c2 = st.columns([4,2])
+    c1, c2 = st.columns([4, 2])
     with c1:
         st.markdown("Programme spend adjustments: cuts improve surplus (green badge).")
-        for grp,rows in spend_groups.items():
+        for grp, rows in spend_groups.items():
             with st.expander(grp):
                 for r in rows:
-                    key=f"spend_{r['name']}"; base=r['baseline']
-                    prev_pct=int(spend_changes[r['name']]*100)
-                    prev=st.slider(label=r['name'],min_value=int(r['min_pct']),max_value=int(r['max_pct']),value=prev_pct,key=key,format="%d%%",label_visibility="collapsed")
-                    newsp=base*(1+prev/100)
-                    st.markdown(f"**{r['name']}**  <span style='color:grey'>£{base:,.0f} bn</span> → <span style='font-weight:700'>£{newsp:,.0f} bn</span> {badge(-(newsp-base))}",unsafe_allow_html=True)
+                    key = f"spend_{r['name']}"
+                    baseline = r['baseline']
+
+                    # Header + slider in one container to place header above
+                    container = st.container()
+                    header_ph = container.empty()
+                    slider_val = container.slider(
+                        label=r['name'],
+                        min_value=int(r['min_pct']), max_value=int(r['max_pct']),
+                        value=int(spend_changes[r['name']]*100),
+                        key=key,
+                        format="%d%%",
+                        label_visibility="collapsed",
+                    )
+                    newsp = baseline * (1 + slider_val / 100)
+                    sup_delta = -(newsp - baseline)
+                    header_ph.markdown(
+                        f"**{r['name']}**   "
+                        f"<span style='color:grey'>£{baseline:,.0f} bn</span> → "
+                        f"<span style='font-weight:700'>£{newsp:,.0f} bn</span> {badge(sup_delta)}",
+                        unsafe_allow_html=True,
+                    )
     with c2:
-        st.metric("Total receipts",f"£{total_receipts_new:,.0f} bn",f"{tax_delta:+.1f}")
-        st.metric("Programme spend",f"£{programme_spend_new:,.0f} bn",f"{-spend_delta:+.1f}")
-        st.metric("Surplus (+) / Deficit (−)",f"£{surplus_new:,.0f} bn",f"{surplus_new-baseline_surplus:+.1f}",delta_color="normal")
+        st.metric("Total receipts", f"£{total_receipts_new:,.0f} bn", f"{tax_delta:+.1f}")
+        st.metric("Programme spend", f"£{programme_spend_new:,.0f} bn", f"{-spend_delta:+.1f}")
+        st.metric(
+            "Surplus (+) / Deficit (−)",
+            f"£{surplus_new:,.0f} bn",
+            f"{surplus_new - baseline_surplus:+.1f}",
+            delta_color="normal"
+        )
 
 # --- Results Tab
 with tab_results:

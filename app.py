@@ -117,34 +117,28 @@ with tab_tax:
             with st.expander(grp):
                 for r in rows:
                     key = f"tax_{r['name']}"
-                    baseline, unit = r['baseline'], r['unit']
-                    # parse step size for non-% units
+                    baseline = r["baseline"]
+                    unit = r["unit"]
                     step = parse_step(unit)
 
-                    # Header + slider in one container to place header above
+                    # Header & slider combined
                     container = st.container()
                     header_ph = container.empty()
                     slider_val = container.slider(
-                        label=r['name'],
-                        min_value=int(r['min_change']), max_value=int(r['max_change']),
-                        value=tax_changes[r['name']],
+                        label=r["name"],
+                        min_value=int(r["min_change"]),
+                        max_value=int(r["max_change"]),
+                        value=tax_changes[r["name"]],
                         key=key,
-                        label_visibility="collapsed",
+                        label_visibility="collapsed"
                     )
-(
-                        label=r['name'],
-                        min_value=int(r['min_change']), max_value=int(r['max_change']),
-                        value=tax_changes[r['name']],
-                        key=key,
-                        label_visibility="collapsed",
-                    )
-                    new_val = baseline + slider_val
-                    sup_delta = slider_val * r['delta_per_unit']
+                    new_val = baseline + slider_val * step
+                    sup_delta = slider_val * r["delta_per_unit"]
                     header_ph.markdown(
                         f"**{r['name']}**   "
                         f"<span style='color:grey'>{fmt_value(baseline, unit)}</span> → "
                         f"<span style='font-weight:700'>{fmt_value(new_val, unit)}</span> {badge(sup_delta)}",
-                        unsafe_allow_html=True,
+                        unsafe_allow_html=True
                     )
     with c2:
         st.metric("Total receipts", f"£{total_receipts_new:,.0f} bn", f"{tax_delta:+.1f}")
@@ -152,7 +146,7 @@ with tab_tax:
         st.metric(
             "Surplus (+) / Deficit (−)",
             f"£{surplus_new:,.0f} bn",
-            f"{surplus_new-baseline_surplus:+.1f}",
+            f"{surplus_new - baseline_surplus:+.1f}",
             delta_color="normal"
         )
 

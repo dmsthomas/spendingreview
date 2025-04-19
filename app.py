@@ -144,32 +144,13 @@ with tabs[0]:
                     header_ph = container.empty()
                     slider_val = container.slider(
     label=r['name'],
-    min_value=int(r['min_change']), max_value=int(r['max_change']),
+    min_value=int(r['min_pct']),
+    max_value=int(r['max_pct']),
     value=st.session_state.get(key, 0),
     key=key,
-    label_visibility="collapsed"
-), max_value=int(r['max_change']),
-                        key=key,
-                        label_visibility="collapsed"
-                    )
-                    new_val = baseline + slider_val
-                    sup_delta = slider_val * r['delta_per_unit']
-                    header_ph.markdown(
-                        f"**{r['name']}**  <span style='color:grey'>{fmt_value(baseline, unit)}</span> → "
-                        f"<span style='font-weight:700'>{fmt_value(new_val, unit)}</span> {badge(sup_delta)}",
-                        unsafe_allow_html=True,
-                    )
-    with col2:
-        st.metric("Total receipts", f"£{total_receipts:,.0f} bn", f"{tax_delta:+.1f}")
-        st.metric("Programme spend", f"£{programme_spend:,.0f} bn", f"{-spend_delta:+.1f}")
-        st.metric(
-            "Surplus (+) / Deficit (−)",
-            f"£{surplus_new:,.0f} bn",
-            f"{surplus_new - baseline_surplus:+.1f}",
-            delta_color="normal"
-        )
-
-# --- Spend tab
+    format="%d%%",
+    label_visibility="collapsed",
+)  # slider control slider control --- Spend tab
 with tabs[1]:
     st.header("Spend settings & summary")
     col1, col2 = st.columns([4, 2])

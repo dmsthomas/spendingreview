@@ -1,0 +1,30 @@
+name,baseline,min_pct,max_pct,comment
+NHS England,192,-40,40,
+Public health,4,-40,40,
+Adult social care grant,3,-40,40,
+Early‑years & childcare,6,-40,40,
+Schools,72,-40,40,
+Further education & skills,6,-40,40,
+Higher education + student loans subsidy,19,-40,40,
+Defence & Security,57,-40,40,
+Universal Credit & legacy,74,-40,40,
+Housing Benefit,18,-40,40,
+Disability benefits (PIP/DLA/AA),23,-40,40,
+Child Benefit,12,-40,40,
+State Pension,123,-40,40,
+Pensioner benefits,3,-40,40,
+Transport operations & roads,13,-40,40,
+Major rail projects,6,-40,40,
+Environment & climate programmes,5,-40,40,
+Public order & justice,24,-40,40,
+Overseas aid,11,-40,40,
+FCDO diplomatic core,2,-40,40,
+"Culture, media & sport",13,-40,40,"Arts Council, museums, sport bodies, heritage, major events."
+Public R&D & innovation,18,-40,40,"UKRI, defence & medical R&D, industrial strategy funds."
+Housing & community development,20,-40,40,"Affordable housing, regeneration, planning, amenities."
+Environment & agriculture (non‑Net Zero),15,-40,40,"Farming subsidies, biodiversity, flood defences."
+Business & industry support,20,-40,40,"BEIS & DIT enterprise, growth, comms/5G, export credit."
+Devolved governments block grants,68,-40,40,"Resource & capital DEL for Scotland, Wales, NI."
+Core local‑gov funding,45,-40,40,"Revenue Support Grant, ring‑fenced grants, public‑health grant."
+EU transactions,1,-40,40,Net EU contributions after abatement.
+Cross‑cutting admin & accounting adj.,307,-40,40,"HMRC, Cabinet Office, Treasury, student‑loan write‑downs."

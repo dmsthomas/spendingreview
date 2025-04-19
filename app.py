@@ -24,7 +24,9 @@ from calc import (
 
 # Config
 DATA_DIR = pathlib.Path(__file__).parent
-OTHER_RECEIPTS = 310  # £bn
+OTHER_RECEIPTS = 310  # £bn residual (unused if using BASELINE_RECEIPTS)
+BASELINE_RECEIPTS = 1141  # £bn total receipts at baseline
+  # £bn
 
 st.set_page_config(page_title="UK Mock Spending Review", layout="wide")
 st.title("💰 UK Mock Spending Review (v1.8)")
@@ -90,7 +92,7 @@ tax_delta=compute_tax_delta(tax_df,changes_tax)
 spend_delta=compute_spend_delta(spend_df,changes_spend)
 baseline_surplus=-BASELINE_DEFICIT
 surplus_new=baseline_surplus+tax_delta-spend_delta
-total_receipts=tax_df['baseline_receipts'].sum()+OTHER_RECEIPTS+tax_delta
+total_receipts = BASELINE_RECEIPTS + tax_delta
 programme_spend=spend_df['baseline'].sum()+spend_delta
 
 # Tabs

@@ -143,10 +143,10 @@ with tab_tax:
                         label_visibility="collapsed",
                         help=r.get('note', ''),
                     ),
-                        help=str(note),
+                    help=str(note),
                     ),
                     )
-                        help=str(r.get('note',''))
+                    help=str(r.get('note',''))
                     )
                     newsp = baseline * (1 + slider_val / 100)
                     sup_delta = -(newsp - baseline)

@@ -48,7 +48,7 @@ def badge(delta_surplus: float) -> str:
     sign = "+" if delta_surplus > 0 else ""
     return (
         f"<span style='background:{colour};color:#fff;"
-        f"padding:2px 6px;border-radius:4px;font-size:0.9em'>{sign}{delta_surplus:.1f} bn</span>"
+        f"padding:2px 6px;border-radius:4px;font-size:0.9em'>{sign}{delta_surplus:.1f} bn</span>"
     )
 
 
@@ -129,42 +129,43 @@ for _, row in spend_df.iterrows():
 tax_tab, spend_tab, results_tab = st.tabs(["Tax", "Spend", "Results"])
 
 # --- TAX tab
-tab = tax_tab
-st.header("Tax settings & summary")
-col1, col2 = st.columns([4, 2])
+with tabs[0]:
+    st.header("Tax settings & summary")
+    col1, col2 = st.columns([4, 2])
 
-with col1:
-    st.caption("Revenue‑raising moves improve surplus (green badge).")
-    for grp, rows in tax_groups.items():
-        with st.expander(grp, expanded=False):
-            for r in rows:
-                key = f"tax_{r['name']}"
-                baseline = r['baseline']
-                unit_raw = r['unit']
-                min_d, max_d = int(r['min_change']), int(r['max_change'])
-                step = parse_step(unit_raw)
+    with col1:
+        st.caption("Revenue‑raising moves improve surplus (green badge).")
+        for grp, rows in tax_groups.items():
+            with st.expander(grp, expanded=False):
+                for r in rows:
+                    key = f"tax_{r['name']}"
+                    baseline, unit_raw = r['baseline'], r['unit']
+                    min_d, max_d = int(r['min_change']), int(r['max_change'])
+                    step = float(r['step'])  # read step from CSV
 
-                # Header above slider
-                delta_prev = st.session_state.get(key, 0)
-                new_val = baseline + delta_prev * step
-                sup_delta = delta_prev * r['delta_per_unit']
-                st.markdown(
-                    f"**{r['name']}**   "
-                    f"<span style='color:grey'>{fmt_value(baseline, unit_raw)}</span> → "
-                    f"<span style='font-weight:700'>{fmt_value(new_val, unit_raw)}</span> {badge(sup_delta)}",
-                    unsafe_allow_html=True,
-                )
-                # Slider
-                st.slider(
-                    label=r['name'],
-                    min_value=min_d, max_value=max_d,
-                    value=delta_prev,
-                    step=1,
-                    key=key,
-                    label_visibility="collapsed",
-                )
+                    # Header above slider
+                    delta_prev = st.session_state.get(key, 0)
+                    new_val = baseline + delta_prev * step
+                    sup_delta = delta_prev * r['delta_per_unit']
+                    st.markdown(
+                        f"**{r['name']}**   "
+                        f"<span style='color:grey'>{fmt_value(baseline, unit_raw)}</span> → "
+                        f"<span style='font-weight:700'>{fmt_value(new_val, unit_raw)}</span> {badge(sup_delta)}",
+                        unsafe_allow_html=True,
+                    )
 
-with col2:
+                    # Slider with dynamic step
+                    st.slider(
+                        label=r['name'],
+                        min_value=min_d,
+                        max_value=max_d,
+                        value=delta_prev,
+                        step=step,
+                        key=key,
+                        label_visibility="collapsed",
+                    )
+
+    with col2:
     st.subheader("Summary")
     tax_changes = {r['name']: st.session_state.get(f"tax_{r['name']}", 0) for _, r in tax_df.iterrows()}
     spend_changes = {r['name']: st.session_state.get(f"spend_{r['name']}", 0) / 100 for _, r in spend_df.iterrows()}
@@ -175,11 +176,11 @@ with col2:
     total_receipts_new = tax_df['baseline_receipts'].sum() + OTHER_RECEIPTS + tax_delta
     programme_spend_new = spend_df['baseline'].sum() + spend_delta
 
-    st.metric("Total receipts", f"£{total_receipts_new:,.0f} bn", f"{tax_delta:+.1f}")
-    st.metric("Programme spend", f"£{programme_spend_new:,.0f} bn", f"{-spend_delta:+.1f}")
+    st.metric("Total receipts", f"£{total_receipts_new:,.0f} bn", f"{tax_delta:+.1f}")
+    st.metric("Programme spend", f"£{programme_spend_new:,.0f} bn", f"{-spend_delta:+.1f}")
     st.metric(
         "Surplus (+) / Deficit (−)",
-        f"£{surplus_new:,.0f} bn",
+        f"£{surplus_new:,.0f} bn",
         f"{surplus_new - baseline_surplus:+.1f}",
         delta_color="normal"
     )
@@ -203,8 +204,8 @@ with col1:
                 sup_delta = -(newsp - baseline)
                 st.markdown(
                     f"**{r['name']}**   "
-                    f"<span style='color:grey'>£{baseline:,.0f} bn</span> → "
-                    f"<span style='font-weight:700'>£{newsp:,.0f} bn</span> {badge(sup_delta)}",
+                    f"<span style='color:grey'>£{baseline:,.0f} bn</span> → "
+                    f"<span style='font-weight:700'>£{newsp:,.0f} bn</span> {badge(sup_delta)}",
                     unsafe_allow_html=True,
                 )
                 # Slider
@@ -257,5 +258,5 @@ with table_col2:
     st.table(df_spend)
 
 # Footer
-st.markdown(f"Baseline surplus: £{-BASELINE_DEFICIT:,.0f} bn → New surplus: £{(-BASELINE_DEFICIT + tax_delta - spend_delta):,.0f} bn.")
+st.markdown(f"Baseline surplus: £{-BASELINE_DEFICIT:,.0f} bn → New surplus: £{(-BASELINE_DEFICIT + tax_delta - spend_delta):,.0f} bn.")
 # <<< end of app.py <<<

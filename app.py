@@ -144,7 +144,8 @@ with tab_tax:
                     # Escape single quotes in tooltip
                     tooltip = note.replace("'", "&#39;")
                     header_ph.markdown(
-                        f"<span title=\"{tooltip}\">ℹ️</span> **{r['name']}**  "
+                        # Info icon with tooltip, then measure name and values
+                        f"<span title='{tooltip}'>ℹ️</span> **{r['name']}**  "
                         f"<span style='color:grey'>{fmt_value(baseline, unit)}</span> → "
                         f"<span style='font-weight:700'>{fmt_value(new_val, unit)}</span> {badge(sup_delta)}",
                         unsafe_allow_html=True,

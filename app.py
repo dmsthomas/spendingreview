@@ -143,7 +143,7 @@ with tab_tax:
                     sup_delta = slider_val * r['delta_per_unit']
 
                     # Build tooltip-safe HTML
-                    tooltip = str(note).replace('"', '&quot;'))
+                    tooltip = str(note).replace('"', '&quot;')
                     header_html = (
                         f"<span title=\"{tooltip}\">ℹ️</span> <strong>{r['name']}</strong> "
                         + f"<span style='color:grey'>{fmt_value(baseline, unit)}</span> -> "

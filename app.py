@@ -143,8 +143,12 @@ with tabs[0]:
                     container = st.container()
                     header_ph = container.empty()
                     slider_val = container.slider(
-                        label=r['name'],
-                        min_value=int(r['min_change']), max_value=int(r['max_change']),
+    label=r['name'],
+    min_value=int(r['min_change']), max_value=int(r['max_change']),
+    value=st.session_state.get(key, 0),
+    key=key,
+    label_visibility="collapsed"
+), max_value=int(r['max_change']),
                         key=key,
                         label_visibility="collapsed"
                     )
@@ -180,8 +184,13 @@ with tabs[1]:
                     container = st.container()
                     header_ph = container.empty()
                     slider_val = container.slider(
-                        label=r['name'],
-                        min_value=int(r['min_pct']), max_value=int(r['max_pct']),
+    label=r['name'],
+    min_value=int(r['min_pct']), max_value=int(r['max_pct']),
+    value=st.session_state.get(key, 0),
+    key=key,
+    format="%d%%",
+    label_visibility="collapsed"
+),
                         key=key,
                         format="%d%%",
                         label_visibility="collapsed"

@@ -118,11 +118,20 @@ with tab_tax:
                 for r in rows:
                     key = f"tax_{r['name']}"
                     baseline, unit = r['baseline'], r['unit']
+                    # parse step size for non-% units
+                    step = parse_step(unit)
 
                     # Header + slider in one container to place header above
                     container = st.container()
                     header_ph = container.empty()
                     slider_val = container.slider(
+                        label=r['name'],
+                        min_value=int(r['min_change']), max_value=int(r['max_change']),
+                        value=tax_changes[r['name']],
+                        key=key,
+                        label_visibility="collapsed",
+                    )
+(
                         label=r['name'],
                         min_value=int(r['min_change']), max_value=int(r['max_change']),
                         value=tax_changes[r['name']],

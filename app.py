@@ -135,10 +135,13 @@ with tab_tax:
                     header_ph = container.empty()
                     slider_val = container.slider(
                         label=r['name'],
-                        min_value=int(r['min_pct']), max_value=int(r['max_pct']),
-                        value=int(spend_changes[r['name']]*100), key=key,
+                        min_value=int(r.get('min_pct', r['min_change'])), max_value=int(r.get('max_pct', r['max_change'])),
+                        value=int(spend_changes.get(r['name'], 0) * 100),
+                        key=key,
                         format="%d%%",
                         label_visibility="collapsed",
+                        help=str(note),
+                    )
                         help=str(r.get('note',''))
                     )
                     newsp = baseline * (1 + slider_val / 100)

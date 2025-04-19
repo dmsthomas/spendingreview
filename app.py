@@ -135,18 +135,14 @@ with tab_tax:
                     header_ph = container.empty()
                     slider_val = container.slider(
                         label=r['name'],
-                        min_value=int(r.get('min_change', r.get('min_pct', 0))), max_value=int(r.get('max_change', r.get('max_pct', 0))),
-                        value=tax_changes[r['name']],
-                        key=key,
-                        label_visibility="collapsed",
-                        help=r.get('note',''),
-                    ))),
+                        min_value=int(r.get('min_pct', r.get('min_change', 0))),
                         max_value=int(r.get('max_pct', r.get('max_change', 0))),
-                        value=int(spend_changes.get(r['name'], 0) * 100),
+                        value=int(spend_changes[r['name']]*100),
                         key=key,
                         format="%d%%",
                         label_visibility="collapsed",
-                        help=r.get('note',''),
+                        help=r.get('note', ''),
+                    ),
                         help=str(note),
                     ),
                     )

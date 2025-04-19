@@ -144,6 +144,7 @@ with tab_tax:
                         value=tax_changes[r['name']],
                         key=key,
                         label_visibility="collapsed"
+                        help=r.get('note', '')
                     )
                     new_val = baseline + slider_val * step
                     sup_delta = slider_val * r['delta_per_unit']

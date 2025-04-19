@@ -1,10 +1,10 @@
 # >>> file: app.py >>>
 """
-UK Mock Spending Review – v2.1
+UK Mock Spending Review – v2.2
 - Three tabs: Tax, Spend, Results
-- Fixed tab layout, uses BASELINE_RECEIPTS constant for total receipts
-- Summary panels on Tax and Spend tabs
-- Results tab: side-by-side stacked bars with separate legends, summary tables beneath
+- parse_step ensures correct increments for non-% units
+- Sliders with headers above
+- Summary panels and Results tab restored
 """
 import re
 import pathlib
@@ -29,7 +29,7 @@ OTHER_RECEIPTS = 310            # £bn residual
 BASELINE_RECEIPTS = 1141        # £bn at baseline total receipts
 
 st.set_page_config(page_title="UK Mock Spending Review", layout="wide")
-st.title("💰 UK Mock Spending Review (v2.1)")
+st.title("💰 UK Mock Spending Review (v2.2)")
 
 # Load baseline data
 try:
@@ -41,6 +41,7 @@ except FileNotFoundError as e:
 
 # Helper functions
 def badge(delta_surplus: float) -> str:
+    """Return colored badge text for surplus impact."""
     colour = "#228B22" if delta_surplus > 0 else "#C70039" if delta_surplus < 0 else "#666"
     sign = "+" if delta_surplus > 0 else ""
     return (
@@ -49,12 +50,23 @@ def badge(delta_surplus: float) -> str:
     )
 
 def fmt_value(val: float, unit: str) -> str:
+    """Format a value with its unit."""
     u = unit.strip()
     if "ppt" in u or "%" in u:
         return f"{int(round(val))}%"
     if u.startswith("£"):
         return f"£{val:,.0f}"
     return f"{val:g}{u}"
+
+def parse_step(unit: str) -> float:
+    """Extract numeric step from unit like '£100' or '£5k'."""
+    m = re.search(r"£\s*([\d\.]+)(k?)", unit.lower())
+    if m:
+        num = float(m.group(1))
+        if m.group(2) == 'k':
+            num *= 1000
+        return num
+    return 1.0
 
 # Grouping logic
 def tax_group(name: str) -> str:
@@ -85,13 +97,16 @@ def spend_group(name: str) -> str:
 
 # Build grouped dicts
 tax_groups = defaultdict(list)
-for _, r in tax_df.iterrows(): tax_groups[tax_group(r['name'])].append(r)
+for _, r in tax_df.iterrows():
+    tax_groups[tax_group(r['name'])].append(r)
 spend_groups = defaultdict(list)
-for _, r in spend_df.iterrows(): spend_groups[spend_group(r['name'])].append(r)
+for _, r in spend_df.iterrows():
+    spend_groups[spend_group(r['name'])].append(r)
 
 # Compute deltas & totals
-tax_changes = {r['name']: st.session_state.get(f"tax_{r['name']}",0) for _,r in tax_df.iterrows()}
-spend_changes = {r['name']: st.session_state.get(f"spend_{r['name']}",0)/100 for _,r in spend_df.iterrows()}
+tax_changes = {r['name']: st.session_state.get(f"tax_{r['name']}", 0) for _, r in tax_df.iterrows()}
+spend_changes = {r['name']: st.session_state.get(f"spend_{r['name']}", 0) / 100 for _, r in spend_df.iterrows()}
+
 tax_delta = compute_tax_delta(tax_df, tax_changes)
 spend_delta = compute_spend_delta(spend_df, spend_changes)
 baseline_surplus = -BASELINE_DEFICIT
@@ -101,11 +116,11 @@ total_receipts_new = BASELINE_RECEIPTS + tax_delta
 programme_spend_new = spend_df['baseline'].sum() + spend_delta
 
 # Prepare category breakdown
-tax_cat = {grp:sum(tax_changes[r['name']]*r['delta_per_unit'] for r in rows) for grp,rows in tax_groups.items()}
-spend_cat = {grp:sum(spend_changes[r['name']]*r['baseline'] for r in rows) for grp,rows in spend_groups.items()}
+tax_cat = {grp: sum(tax_changes[r['name']] * r['delta_per_unit'] for r in rows) for grp, rows in tax_groups.items()}
+spend_cat = {grp: sum(spend_changes[r['name']] * r['baseline'] for r in rows) for grp, rows in spend_groups.items()}
 
 # Tabs layout
-tab_tax, tab_spend, tab_results = st.tabs(["Tax","Spend","Results"])
+tab_tax, tab_spend, tab_results = st.tabs(["Tax", "Spend", "Results"])
 
 # --- Tax Tab
 with tab_tax:
@@ -117,28 +132,26 @@ with tab_tax:
             with st.expander(grp):
                 for r in rows:
                     key = f"tax_{r['name']}"
-                    baseline = r["baseline"]
-                    unit = r["unit"]
+                    baseline, unit = r['baseline'], r['unit']
                     step = parse_step(unit)
 
-                    # Header & slider combined
+                    # Slider + header
                     container = st.container()
                     header_ph = container.empty()
                     slider_val = container.slider(
-                        label=r["name"],
-                        min_value=int(r["min_change"]),
-                        max_value=int(r["max_change"]),
-                        value=tax_changes[r["name"]],
+                        label=r['name'],
+                        min_value=int(r['min_change']), max_value=int(r['max_change']),
+                        value=tax_changes[r['name']],
                         key=key,
                         label_visibility="collapsed"
                     )
                     new_val = baseline + slider_val * step
-                    sup_delta = slider_val * r["delta_per_unit"]
+                    sup_delta = slider_val * r['delta_per_unit']
                     header_ph.markdown(
                         f"**{r['name']}**   "
                         f"<span style='color:grey'>{fmt_value(baseline, unit)}</span> → "
                         f"<span style='font-weight:700'>{fmt_value(new_val, unit)}</span> {badge(sup_delta)}",
-                        unsafe_allow_html=True
+                        unsafe_allow_html=True,
                     )
     with c2:
         st.metric("Total receipts", f"£{total_receipts_new:,.0f} bn", f"{tax_delta:+.1f}")
@@ -162,7 +175,7 @@ with tab_spend:
                     key = f"spend_{r['name']}"
                     baseline = r['baseline']
 
-                    # Header + slider in one container to place header above
+                    # Slider + header
                     container = st.container()
                     header_ph = container.empty()
                     slider_val = container.slider(
@@ -194,23 +207,27 @@ with tab_spend:
 # --- Results Tab
 with tab_results:
     st.header("Results Overview: Change by Category")
-    col1,col2 = st.columns(2)
+    col1, col2 = st.columns(2)
     with col1:
         st.subheader("Tax change by category")
-        fig=go.Figure()
-        for grp,val in tax_cat.items(): fig.add_trace(go.Bar(name=grp,x=["Tax"],y=[val]))
-        fig.update_layout(barmode='stack',showlegend=True,xaxis=dict(visible=False),yaxis=dict(title='Δ £bn'))
-        st.plotly_chart(fig,use_container_width=True)
+        fig = go.Figure()
+        for grp, val in tax_cat.items(): fig.add_trace(go.Bar(name=grp, x=["Tax"], y=[val]))
+        fig.update_layout(barmode='stack', showlegend=True, xaxis=dict(visible=False), yaxis=dict(title='Δ £bn'))
+        st.plotly_chart(fig, use_container_width=True)
     with col2:
         st.subheader("Spend change by category")
-        fig2=go.Figure()
-        for grp,val in spend_cat.items(): fig2.add_trace(go.Bar(name=grp,x=["Spend"],y=[val]))
-        fig2.update_layout(barmode='stack',showlegend=True,xaxis=dict(visible=False),yaxis=dict(title='Δ £bn'))
-        st.plotly_chart(fig2,use_container_width=True)
-    t1,t2=st.columns(2)
-    df1=pd.DataFrame([(g,v) for g,v in tax_cat.items()],columns=['Category','Δ £bn']).sort_values('Δ £bn',ascending=False)
-    df2=pd.DataFrame([(g,v) for g,v in spend_cat.items()],columns=['Category','Δ £bn']).sort_values('Δ £bn',ascending=False)
-    with t1: st.subheader('Tax summary'); st.table(df1)
-    with t2: st.subheader('Spend summary'); st.table(df2)
-    st.markdown(f"Baseline surplus: £{-BASELINE_DEFICIT:,.0f} bn → New surplus: £{surplus_new:,.0f} bn.")
+        fig2 = go.Figure()
+        for grp, val in spend_cat.items(): fig2.add_trace(go.Bar(name=grp, x=["Spend"], y=[val]))
+        fig2.update_layout(barmode='stack', showlegend=True, xaxis=dict(visible=False), yaxis=dict(title='Δ £bn'))
+        st.plotly_chart(fig2, use_container_width=True)
+    t1, t2 = st.columns(2)
+    df_tax = pd.DataFrame([(g,v) for g,v in tax_cat.items()], columns=['Category','Δ £bn']).sort_values('Δ £bn', ascending=False)
+    df_spend = pd.DataFrame([(g,v) for g,v in spend_cat.items()], columns=['Category','Δ £bn']).sort_values('Δ £bn', ascending=False)
+    with t1:
+        st.subheader('Tax summary')
+        st.table(df_tax)
+    with t2:
+        st.subheader('Spend summary')
+        st.table(df_spend)
+    st.markdown(f"Baseline surplus: £{baseline_surplus:,.0f} bn → New surplus: £{surplus_new:,.0f} bn.")
 # <<< end of app.py <<<

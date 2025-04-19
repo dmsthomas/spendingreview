@@ -1,10 +1,12 @@
 # >>> file: app.py >>>
 """
-UK Mock Spending Review – v2.2
+UK Mock Spending Review – v2.3
 - Three tabs: Tax, Spend, Results
-- parse_step ensures correct increments for non-% units
-- Sliders with headers above
-- Summary panels and Results tab restored
+- Info icon tooltip from CSV 'note' column for each measure
+- parse_step for non-% units
+- Sliders with headers above sliders
+- Summary panels on Tax and Spend tabs
+- Results tab: side-by-side vertical stacked bars, summary tables beneath
 """
 import re
 import pathlib
@@ -13,7 +15,6 @@ from collections import defaultdict
 import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 from calc import (
     load_tax_table,
@@ -29,7 +30,7 @@ OTHER_RECEIPTS = 310            # £bn residual
 BASELINE_RECEIPTS = 1141        # £bn at baseline total receipts
 
 st.set_page_config(page_title="UK Mock Spending Review", layout="wide")
-st.title("💰 UK Mock Spending Review (v2.2)")
+st.title("💰 UK Mock Spending Review (v2.3)")
 
 # Load baseline data
 try:
@@ -41,7 +42,6 @@ except FileNotFoundError as e:
 
 # Helper functions
 def badge(delta_surplus: float) -> str:
-    """Return colored badge text for surplus impact."""
     colour = "#228B22" if delta_surplus > 0 else "#C70039" if delta_surplus < 0 else "#666"
     sign = "+" if delta_surplus > 0 else ""
     return (
@@ -50,7 +50,6 @@ def badge(delta_surplus: float) -> str:
     )
 
 def fmt_value(val: float, unit: str) -> str:
-    """Format a value with its unit."""
     u = unit.strip()
     if "ppt" in u or "%" in u:
         return f"{int(round(val))}%"
@@ -59,12 +58,10 @@ def fmt_value(val: float, unit: str) -> str:
     return f"{val:g}{u}"
 
 def parse_step(unit: str) -> float:
-    """Extract numeric step from unit like '£100' or '£5k'."""
     m = re.search(r"£\s*([\d\.]+)(k?)", unit.lower())
     if m:
         num = float(m.group(1))
-        if m.group(2) == 'k':
-            num *= 1000
+        if m.group(2) == 'k': num *= 1000
         return num
     return 1.0
 
@@ -97,11 +94,9 @@ def spend_group(name: str) -> str:
 
 # Build grouped dicts
 tax_groups = defaultdict(list)
-for _, r in tax_df.iterrows():
-    tax_groups[tax_group(r['name'])].append(r)
+for _, r in tax_df.iterrows(): tax_groups[tax_group(r['name'])].append(r)
 spend_groups = defaultdict(list)
-for _, r in spend_df.iterrows():
-    spend_groups[spend_group(r['name'])].append(r)
+for _, r in spend_df.iterrows(): spend_groups[spend_group(r['name'])].append(r)
 
 # Compute deltas & totals
 tax_changes = {r['name']: st.session_state.get(f"tax_{r['name']}", 0) for _, r in tax_df.iterrows()}
@@ -129,10 +124,10 @@ with tab_tax:
     with c1:
         st.markdown("Revenue-raising moves improve surplus (green badge).")
         for grp, rows in tax_groups.items():
-            with st.expander(grp):
+            with st.expander(grp, expanded=False):
                 for r in rows:
                     key = f"tax_{r['name']}"
-                    baseline, unit = r['baseline'], r['unit']
+                    baseline, unit, note = r['baseline'], r['unit'], r.get('note','')
                     step = parse_step(unit)
 
                     # Slider + header
@@ -140,15 +135,23 @@ with tab_tax:
                     header_ph = container.empty()
                     slider_val = container.slider(
                         label=r['name'],
-                        min_value=int(r['min_change']), max_value=int(r['max_change']),
-                        value=tax_changes[r['name']],
+                        min_value=int(r.get('min_pct', r.get('min_change', 0))),
+                        max_value=int(r.get('max_pct', r.get('max_change', 0))),
+                        value=int(spend_changes.get(r['name'], 0) * 100),
                         key=key,
-                        label_visibility="collapsed"
+                        format="%d%%",
+                        label_visibility="collapsed",
+                        help=r.get('note',''),
+                        help=str(note),
+                    ),
                     )
-                    new_val = baseline + slider_val * step
-                    sup_delta = slider_val * r['delta_per_unit']
+                        help=str(r.get('note',''))
+                    )
+                    newsp = baseline * (1 + slider_val / 100)
+                    sup_delta = -(newsp - baseline)
+                    tooltip = str(note).replace("'", "&#39;")
                     header_ph.markdown(
-                        f"**{r['name']}**   "
+                        f"<span title=\"{tooltip}\">ℹ️</span> **{r['name']}**  "
                         f"<span style='color:grey'>{fmt_value(baseline, unit)}</span> → "
                         f"<span style='font-weight:700'>{fmt_value(new_val, unit)}</span> {badge(sup_delta)}",
                         unsafe_allow_html=True,
@@ -159,75 +162,35 @@ with tab_tax:
         st.metric(
             "Surplus (+) / Deficit (−)",
             f"£{surplus_new:,.0f} bn",
-            f"{surplus_new - baseline_surplus:+.1f}",
-            delta_color="normal"
-        )
-
-# --- Spend Tab
-with tab_spend:
-    st.header("Spend settings & summary")
-    c1, c2 = st.columns([4, 2])
-    with c1:
-        st.markdown("Programme spend adjustments: cuts improve surplus (green badge).")
-        for grp, rows in spend_groups.items():
-            with st.expander(grp):
-                for r in rows:
-                    key = f"spend_{r['name']}"
-                    baseline = r['baseline']
-
-                    # Slider + header
-                    container = st.container()
-                    header_ph = container.empty()
-                    slider_val = container.slider(
-                        label=r['name'],
-                        min_value=int(r['min_pct']), max_value=int(r['max_pct']),
-                        value=int(spend_changes[r['name']]*100),
-                        key=key,
-                        format="%d%%",
-                        label_visibility="collapsed",
-                    )
-                    newsp = baseline * (1 + slider_val / 100)
-                    sup_delta = -(newsp - baseline)
-                    header_ph.markdown(
-                        f"**{r['name']}**   "
-                        f"<span style='color:grey'>£{baseline:,.0f} bn</span> → "
-                        f"<span style='font-weight:700'>£{newsp:,.0f} bn</span> {badge(sup_delta)}",
-                        unsafe_allow_html=True,
-                    )
-    with c2:
-        st.metric("Total receipts", f"£{total_receipts_new:,.0f} bn", f"{tax_delta:+.1f}")
-        st.metric("Programme spend", f"£{programme_spend_new:,.0f} bn", f"{-spend_delta:+.1f}")
-        st.metric(
-            "Surplus (+) / Deficit (−)",
-            f"£{surplus_new:,.0f} bn",
-            f"{surplus_new - baseline_surplus:+.1f}",
-            delta_color="normal"
+            f"{surplus_new - baseline_surplus:+.1f}", delta_color="normal"
         )
 
 # --- Results Tab
 with tab_results:
     st.header("Results Overview: Change by Category")
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns(2, gap="large")
     with col1:
         st.subheader("Tax change by category")
         fig = go.Figure()
         for grp, val in tax_cat.items(): fig.add_trace(go.Bar(name=grp, x=["Tax"], y=[val]))
-        fig.update_layout(barmode='stack', showlegend=True, xaxis=dict(visible=False), yaxis=dict(title='Δ £bn'))
+        fig.update_layout(barmode='stack', showlegend=True, legend=dict(x=1.0, y=1.0), xaxis=dict(visible=False), yaxis=dict(title='Δ £bn'))
         st.plotly_chart(fig, use_container_width=True)
     with col2:
         st.subheader("Spend change by category")
         fig2 = go.Figure()
         for grp, val in spend_cat.items(): fig2.add_trace(go.Bar(name=grp, x=["Spend"], y=[val]))
-        fig2.update_layout(barmode='stack', showlegend=True, xaxis=dict(visible=False), yaxis=dict(title='Δ £bn'))
+        fig2.update_layout(barmode='stack', showlegend=True, legend=dict(x=1.0, y=1.0), xaxis=dict(visible=False), yaxis=dict(title='Δ £bn'))
         st.plotly_chart(fig2, use_container_width=True)
+
     t1, t2 = st.columns(2)
-    df_tax = pd.DataFrame([(g,v) for g,v in tax_cat.items()], columns=['Category','Δ £bn']).sort_values('Δ £bn', ascending=False)
-    df_spend = pd.DataFrame([(g,v) for g,v in spend_cat.items()], columns=['Category','Δ £bn']).sort_values('Δ £bn', ascending=False)
+    df_tax = pd.DataFrame([(g, v) for g, v in tax_cat.items()], columns=['Category','Δ £bn']).sort_values('Δ £bn', ascending=False)
+    df_spend = pd.DataFrame([(g, v) for g, v in spend_cat.items()], columns=['Category','Δ £bn']).sort_values('Δ £bn', ascending=False)
     with t1:
         st.subheader('Tax summary')
         st.table(df_tax)
     with t2:
         st.subheader('Spend summary')
         st.table(df_spend)
+
     st.markdown(f"Baseline surplus: £{baseline_surplus:,.0f} bn → New surplus: £{surplus_new:,.0f} bn.")
 # <<< end of app.py <<<

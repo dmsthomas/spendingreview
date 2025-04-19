@@ -133,28 +133,34 @@ with tab_tax:
                     # Slider + header
                     container = st.container()
                     header_ph = container.empty()
-                    # Slider with built-in help tooltip
+
+                    # 1) show the header before the slider
+                    header_ph.markdown(
+                        f"**{r['name']}**   "
+                        f"<span style='color:grey'>£{baseline:,.0f} bn</span> -> "
+                        f"<span style='font-weight:700'>£{(baseline * (1 + (spend_changes[r['name']]*100) / 100)):,.0f} bn</span>",
+                        unsafe_allow_html=True,
+                    )
+
+                    # 2) slider with builtin help tooltip
                     slider_val = container.slider(
                         label=r['name'],
-                        min_value=int(r.get('min_pct', r.get('min_change', 0))),
-                        max_value=int(r.get('max_pct', r.get('max_change', 0))),
-                        value=int(spend_changes[r['name']]*100),
+                        min_value=int(r.get('min_pct', 0)),
+                        max_value=int(r.get('max_pct', 0)),
+                        value=int(spend_changes[r['name']] * 100),
                         key=key,
                         format="%d%%",
                         label_visibility="collapsed",
-                        help=r.get('note', ''),
+                        help=r.get('note', '')
                     )
-                    # Compute new spend and surplus delta
+
+                    # 3) recompute and re‑render the header after the user moves it
                     newsp = baseline * (1 + slider_val / 100)
                     sup_delta = -(newsp - baseline)
-                    # Header display
                     header_ph.markdown(
                         f"**{r['name']}**   "
-                        f"<span style='color:grey'>£{baseline:,.0f} bn</span> → "
-                        f"<span style='font-weight:700'>£{newsp:,.0f} bn</span> {badge(sup_delta)}",
-                        unsafe_allow_html=True,
-                    )}</span> → "
-                        f"<span style='font-weight:700'>{fmt_value(new_val, unit)}</span> {badge(sup_delta)}",
+                        f"<span style='color:grey'>£{baseline:,.0f} bn</span> -> "
+                        f"<span style='font-weight:700'>£{newsp:,.0f} bn</span> {badge(sup_delta)}",
                         unsafe_allow_html=True,
                     )
     with c2:

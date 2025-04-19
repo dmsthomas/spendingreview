@@ -133,6 +133,7 @@ with tab_tax:
                     # Slider + header
                     container = st.container()
                     header_ph = container.empty()
+                    # Slider with built-in help tooltip
                     slider_val = container.slider(
                         label=r['name'],
                         min_value=int(r.get('min_pct', r.get('min_change', 0))),
@@ -142,18 +143,17 @@ with tab_tax:
                         format="%d%%",
                         label_visibility="collapsed",
                         help=r.get('note', ''),
-                    ),
-                    help=str(note),
-                    ),
                     )
-                    help=str(r.get('note',''))
-                    )
+                    # Compute new spend and surplus delta
                     newsp = baseline * (1 + slider_val / 100)
                     sup_delta = -(newsp - baseline)
-                    tooltip = str(note).replace("'", "&#39;")
+                    # Header display
                     header_ph.markdown(
-                        f"<span title=\"{tooltip}\">ℹ️</span> **{r['name']}**  "
-                        f"<span style='color:grey'>{fmt_value(baseline, unit)}</span> → "
+                        f"**{r['name']}**   "
+                        f"<span style='color:grey'>£{baseline:,.0f} bn</span> → "
+                        f"<span style='font-weight:700'>£{newsp:,.0f} bn</span> {badge(sup_delta)}",
+                        unsafe_allow_html=True,
+                    )}</span> → "
                         f"<span style='font-weight:700'>{fmt_value(new_val, unit)}</span> {badge(sup_delta)}",
                         unsafe_allow_html=True,
                     )

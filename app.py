@@ -186,6 +186,7 @@ with tab_spend:
                         key=key,
                         format="%d%%",
                         label_visibility="collapsed",
+                        help=r.get('note', '')
                     )
                     newsp = baseline * (1 + slider_val / 100)
                     sup_delta = -(newsp - baseline)

@@ -14,6 +14,7 @@ import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import math
 
 from calc import (
     load_tax_table,
@@ -135,6 +136,10 @@ with tab_tax:
                     baseline, unit = r['baseline'], r['unit']
                     step = parse_step(unit)
 
+                    # Pull note
+                    note = r.get('note', '')
+                    note = '' if pd.isna(note) else str(note)
+
                     # Slider + header
                     container = st.container()
                     header_ph = container.empty()
@@ -144,7 +149,7 @@ with tab_tax:
                         value=tax_changes[r['name']],
                         key=key,
                         label_visibility="collapsed",
-                        help=r.get('note', '')
+                        help=note
                     )
                     new_val = baseline + slider_val * step
                     sup_delta = slider_val * r['delta_per_unit']
@@ -175,6 +180,10 @@ with tab_spend:
                 for r in rows:
                     key = f"spend_{r['name']}"
                     baseline = r['baseline']
+                    
+                    # Pull note from CSV
+                    note = r.get('note', '')
+                    note = '' if pd.isna(note) else str(note)
 
                     # Slider + header
                     container = st.container()
@@ -186,7 +195,7 @@ with tab_spend:
                         key=key,
                         format="%d%%",
                         label_visibility="collapsed",
-                        help=r.get('note', '')
+                        help=note
                     )
                     newsp = baseline * (1 + slider_val / 100)
                     sup_delta = -(newsp - baseline)

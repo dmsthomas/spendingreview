@@ -15,6 +15,7 @@ import streamlit as st
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import math
+import json, base64
 
 from calc import (
     load_tax_table,
@@ -95,6 +96,19 @@ def spend_group(name: str) -> str:
     if any(x in n for x in ["culture","sport","housing","community","business","r&d","innovation"]): return "Economic & Community"
     if any(x in n for x in ["devolved","local","eu","cross‑cutting"]): return "Inter‑governmental & Other"
     return "Other programmes"
+
+# --------- Restore state from URL (if any) ---------
+qp = st.query_params  # new Streamlit API (read‑write dict‑like)
+if "state" in qp:
+    try:
+        raw = qp["state"][0]
+        payload = json.loads(base64.urlsafe_b64decode(raw.encode()).decode())
+        for k, v in payload.get("tax", {}).items():
+            st.session_state[f"tax_{k}"] = v
+        for k, v in payload.get("spend", {}).items():
+            st.session_state[f"spend_{k}"] = v
+    except Exception:
+        st.warning("⚠️ Could not load shared state from URL; it may be corrupted.")
 
 # Build grouped dicts
 tax_groups = defaultdict(list)
@@ -241,4 +255,17 @@ with tab_results:
         st.subheader('Spend summary')
         st.table(df_spend)
     st.markdown(f"Baseline surplus: £{baseline_surplus:,.0f} bn → New surplus: £{surplus_new:,.0f} bn.")
+
+    # --- Shareable link generator ---
+    share = st.button("🔗 Generate shareable link")
+    if share:
+        state_blob = {
+            "tax": {name: st.session_state.get(f"tax_{name}", 0) for name in tax_df['name']},
+            "spend": {name: st.session_state.get(f"spend_{name}", 0) for name in spend_df['name']},
+        }
+        encoded = base64.urlsafe_b64encode(json.dumps(state_blob).encode()).decode()
+        st.query_params["state"] = encoded   # updates browser URL
+        st.success("Copy your shareable link:")
+        st.code(st.request.url)
+
 # <<< end of app.py <<<

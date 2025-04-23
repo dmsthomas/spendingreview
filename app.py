@@ -155,9 +155,9 @@ with tab_tax:
                     sup_delta = slider_val * r['delta_per_unit']
                     header_ph.markdown(
                         f"**{r['name']}** [ℹ️](# \"{note}\")   "
-                        f"<span style='color:grey'>£{baseline:,.0f} bn</span> → "
-                        f"<span style='font-weight:700'>£{newsp:,.0f} bn</span> {badge(sup_delta)}",
-                        unsafe_allow_html=True
+                        f"<span style='color:grey'>{fmt_value(baseline, unit)}</span> → "
+                        f"<span style='font-weight:700'>{fmt_value(new_val, unit)}</span> {badge(sup_delta)}",
+                        unsafe_allow_html=True,
                     )
     with c2:
         st.metric("Total receipts", f"£{total_receipts_new:,.0f} bn", f"{tax_delta:+.1f}")

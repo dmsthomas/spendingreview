@@ -162,6 +162,7 @@ with tab_tax:
     with c2:
         st.metric("Total receipts", f"£{total_receipts_new:,.0f} bn", f"{tax_delta:+.1f}")
         st.metric("Programme spend", f"£{programme_spend_new:,.0f} bn", f"{-spend_delta:+.1f}")
+        st.metric("Debt interest",       "£ - 99 bn", delta="")
         st.metric(
             "Surplus (+) / Deficit (−)",
             f"£{surplus_new:,.0f} bn",
@@ -208,6 +209,7 @@ with tab_spend:
     with c2:
         st.metric("Total receipts", f"£{total_receipts_new:,.0f} bn", f"{tax_delta:+.1f}")
         st.metric("Programme spend", f"£{programme_spend_new:,.0f} bn", f"{-spend_delta:+.1f}")
+        st.metric("Debt interest",       "£ - 99 bn", delta="")
         st.metric(
             "Surplus (+) / Deficit (−)",
             f"£{surplus_new:,.0f} bn",

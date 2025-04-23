@@ -154,7 +154,7 @@ with tab_tax:
                     new_val = baseline + slider_val * step
                     sup_delta = slider_val * r['delta_per_unit']
                     header_ph.markdown(
-                        f"**{r['name']}**   "
+                        f"**{r['name']}** <span title='{note}'>ℹ️</span>   "
                         f"<span style='color:grey'>{fmt_value(baseline, unit)}</span> → "
                         f"<span style='font-weight:700'>{fmt_value(new_val, unit)}</span> {badge(sup_delta)}",
                         unsafe_allow_html=True,

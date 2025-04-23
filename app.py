@@ -30,7 +30,7 @@ OTHER_RECEIPTS = 310            # £bn residual
 BASELINE_RECEIPTS = 1141        # £bn at baseline total receipts
 
 st.set_page_config(page_title="UK Mock Spending Review", layout="wide")
-st.title("💰 UK Mock Spending Review (v2.2)")
+st.title("💰 Do your own spending review")
 
 # Load baseline data
 try:

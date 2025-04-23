@@ -257,15 +257,13 @@ with tab_results:
     st.markdown(f"Baseline surplus: £{baseline_surplus:,.0f} bn → New surplus: £{surplus_new:,.0f} bn.")
 
     # --- Shareable link generator ---
-    share = st.button("🔗 Generate shareable link")
-    if share:
+    if st.button("🔗 Generate shareable link"):
         state_blob = {
             "tax": {name: st.session_state.get(f"tax_{name}", 0) for name in tax_df['name']},
             "spend": {name: st.session_state.get(f"spend_{name}", 0) for name in spend_df['name']},
         }
         encoded = base64.urlsafe_b64encode(json.dumps(state_blob).encode()).decode()
-        st.query_params["state"] = encoded   # updates browser URL
-        st.success("Copy your shareable link:")
-        st.code(st.request.url)
+        st.query_params["state"] = encoded  # updates the browser URL via Streamlit
+        st.success("✅ Link generated! Copy the URL from your browser's address bar and share it.")
 
 # <<< end of app.py <<<

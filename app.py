@@ -98,16 +98,20 @@ def spend_group(name: str) -> str:
     return "Other programmes"
 
 # --------- Restore state from URL (if any) ---------
-qp = st.query_params  # new Streamlit API (read‑write dict‑like)
+qp = st.query_params  # read-write dict-like object
 if "state" in qp:
     try:
-        raw = qp["state"][0]
-        payload = json.loads(base64.urlsafe_b64decode(raw.encode()).decode())
+        raw = qp["state"] if isinstance(qp["state"], str) else qp["state"][0]
+        # Base64 may come without padding; add it back if needed
+        padding = (-len(raw)) % 4
+        raw += "=" * padding
+        decoded = base64.urlsafe_b64decode(raw.encode()).decode()
+        payload = json.loads(decoded)
         for k, v in payload.get("tax", {}).items():
             st.session_state[f"tax_{k}"] = v
         for k, v in payload.get("spend", {}).items():
             st.session_state[f"spend_{k}"] = v
-    except Exception:
+    except Exception as e:
         st.warning("⚠️ Could not load shared state from URL; it may be corrupted.")
 
 # Build grouped dicts
